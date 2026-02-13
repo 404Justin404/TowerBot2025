@@ -40,10 +40,10 @@ public class Turret extends Subsystem {
     public final ServoActuator hoodact, leveract;
 
     // Flywheel control
-    public static MotorFeedforward flywheelFeedforward = new MotorFeedforward(0.135000, 0.000170, 0);
+    public static MotorFeedforward flywheelFeedforward = new MotorFeedforward(0.135000, 0.001, 0.006);
     //
     //optional: Kv (Velocity): 0.000173
-    public static PIDController flywheelPID = new PIDController( 0.000006, 0, 0.0000008, 0.5);
+    public static PIDController flywheelPID = new PIDController( 0.008, 0, 0.0000008, 0.5);
     public static LowPassFilter velocityFilter = new LowPassFilter(0.5);
     private double targetVelocity = 0; // RPM
     private static final double RPM_TOLERANCE = 100;
@@ -75,7 +75,6 @@ public class Turret extends Subsystem {
 
         shooter2 = hardwareMap.get(DcMotorImplEx.class, "shooter2");
         shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
-        shooter2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Initialize servos
         mainhood = hardwareMap.get(ServoImplEx.class, "hood");

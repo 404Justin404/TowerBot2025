@@ -31,7 +31,7 @@ public class Robot {
     public final MecanumDrive drive;
     public final Intake intake;
     public final Turret turret;
-    public final Lift lift;
+//    public final Lift lift;
 
     class BulkValues
     {
@@ -60,7 +60,7 @@ public class Robot {
         this.intake = new Intake(mode);
         this.drive = new MecanumDrive(mode.hardwareMap, opMode.telemetry);
         this.turret = new Turret(mode);
-        this.lift=new Lift(mode);
+//        this.lift=new Lift(mode);
         this.color = color;
 
         lynxModules = opMode.hardwareMap.getAll(LynxModule.class);
