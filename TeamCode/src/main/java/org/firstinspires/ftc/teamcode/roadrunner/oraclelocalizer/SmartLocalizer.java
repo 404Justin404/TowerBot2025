@@ -95,11 +95,11 @@ public class SmartLocalizer extends Localizer {
         this.telemetry=telemetry;
         canandgyro = hardwareMap.get(AnalogInput.class, "canandgyro");
         pinpoint = hardwareMap.get(OracleGoBildaPinpoint.class, "pinpoint");
-        parallelEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "backRightMotor")));
+        parallelEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "backLeft")));
 //        parallelEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
         lastParallel = new DualNum<>(parallelEncoder.getPositionAndVelocity().position);
 
-        perpendicularEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "frontRightMotor")));
+        perpendicularEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "backRight")));
 //        perpendicularEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
         lastPerpendicular = new DualNum<>(perpendicularEncoder.getPositionAndVelocity().position);
         gyroVoltageOffset = canandgyro.getVoltage();
@@ -122,7 +122,7 @@ public class SmartLocalizer extends Localizer {
     private final ElapsedTime pinpointTime = new ElapsedTime();
     private final IMURotationTracker tracker = new IMURotationTracker();
     @Override
-    public Twist2dDual<Time> update() {
+    public final Twist2dDual<Time> update() {
 //
 //        if(BuildConfig.DEBUG)
 //        {

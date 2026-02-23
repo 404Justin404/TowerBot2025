@@ -33,29 +33,25 @@ public class Turret extends Subsystem {
     private final OracleLynxVoltageSensor voltageSensor;
 
     // Motion profiles
-    public static TrapezoidalMotionProfile hoodMotionProfile = new TrapezoidalMotionProfile(12, 16, 16);
-    public static TrapezoidalMotionProfile leverMotionProfile = new TrapezoidalMotionProfile(12, 16, 16);
+    public static TrapezoidalMotionProfile hoodMotionProfile = new TrapezoidalMotionProfile(30, 30, 30);
+    public static TrapezoidalMotionProfile leverMotionProfile = new TrapezoidalMotionProfile(30, 30, 30);
 
     // Servo actuators
     public final ServoActuator hoodact, leveract;
 
-    // Flywheel control
-    public static MotorFeedforward flywheelFeedforward = new MotorFeedforward(0.135000, 0.001, 0.006);
-    //
-    //optional: Kv (Velocity): 0.000173
-    public static PIDController flywheelPID = new PIDController( 0.008, 0, 0.0000008, 0.5);
+    public static MotorFeedforward flywheelFeedforward = new MotorFeedforward(0.271502, 0.000204, 0);
+    public static PIDController flywheelPID = new PIDController(0.000500, 0.000030, 0, 0.5);
     public static LowPassFilter velocityFilter = new LowPassFilter(0.5);
     private double targetVelocity = 0; // RPM
-    private static final double RPM_TOLERANCE = 100;
+    public static double RPM_TOLERANCE = 100;
 
-    // Distance-based velocity calculation
-// Velocity linear regression constants
-    private static final double VELOCITY_SLOPE = 5.687797;
-    private static final double VELOCITY_INTERCEPT = 2400.620519;
+
+    private static final double VELOCITY_SLOPE = 5.135525;
+    private static final double VELOCITY_INTERCEPT = 2091.049436;
 
     // Hood angle linear regression constants
-    private static final double HOOD_SLOPE = 0.002533;
-    private static final double HOOD_INTERCEPT = 0.024227;
+    private static final double HOOD_SLOPE = -0.000015;
+    private static final double HOOD_INTERCEPT = 0.083449;
 
     private boolean inZone;
 
@@ -75,6 +71,7 @@ public class Turret extends Subsystem {
 
         shooter2 = hardwareMap.get(DcMotorImplEx.class, "shooter2");
         shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooter2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Initialize servos
         mainhood = hardwareMap.get(ServoImplEx.class, "hood");
@@ -133,51 +130,19 @@ public class Turret extends Subsystem {
         shooter2.setPower(power);
     }
 
+    public void setRawPower1(double power) {
+        shooter1.setPower(power);
+    }
+
+    public void setRawPower2(double power) {
+        shooter2.setPower(power);
+    }
+
     /**
      * Set target flywheel velocity with safety limits
      */
     public void setTargetVelocity(double velocity) {
         targetVelocity = Math.max(0, Math.min(6000, velocity));
-    }
-
-    public Command setVelocityByDistance(Localizer localizer, Pose2d corner) {
-        return Command.builder()
-                .init(() -> inZone = true)
-                .update(() -> {
-                    localizer.update();
-                    Pose2d currentPose = localizer.getPose();
-
-                    // Calculate distance to corner in cm
-                    double dx = corner.position.x - currentPose.position.x;
-                    double dy = corner.position.y - currentPose.position.y;
-                    double distance = Math.sqrt(dx * dx + dy * dy) * 2.54;
-
-                    // Calculate velocity based on distance
-                    double velocity = VELOCITY_SLOPE * distance + VELOCITY_INTERCEPT;
-
-                    // Calculate hood position based on distance
-                    double hoodPosition = HOOD_SLOPE * distance + HOOD_INTERCEPT;
-                    hoodact.setTarget(hoodPosition);
-
-                    // Update flywheel power
-                    double currentVelocity = getCurrentVelocity();
-                    double power = flywheelPID.update(velocity, currentVelocity)
-                            + flywheelFeedforward.update(velocity, 0);
-                    power *= (Robot.nominalVoltage / voltageSensor.getVoltage());
-
-                    shooter1.setPower(power);
-                    shooter2.setPower(power);
-
-                    // Check if robot is in valid shooting zone
-                    double currentX = currentPose.position.x;
-                    double currentY = currentPose.position.y;
-                    if (currentY >= Math.abs(currentX) + 9 * 1.41
-                            || (currentY > -46 + 9 * 1.41 && Math.abs(currentX) < 23 + 9 * 1.41)) {
-                        inZone = false;
-                    }
-                })
-                .finished(() -> !inZone)
-                .build();
     }
 
     /**
