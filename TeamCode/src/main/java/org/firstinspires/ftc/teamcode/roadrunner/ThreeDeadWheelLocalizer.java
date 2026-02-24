@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.roadrunner;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.DualNum;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
@@ -15,9 +16,9 @@ import com.acmerobotics.roadrunner.ftc.RawEncoder;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.roadrunner.messages.ThreeDeadWheelInputsMessage;
+import org.firstinspires.ftc.teamcode.messages.ThreeDeadWheelInputsMessage;
 
-//@Config
+@Config
 public final class ThreeDeadWheelLocalizer implements Localizer {
     public static class Params {
         public double par0YTicks = 0.0; // y position of the first parallel encoder (in tick units)

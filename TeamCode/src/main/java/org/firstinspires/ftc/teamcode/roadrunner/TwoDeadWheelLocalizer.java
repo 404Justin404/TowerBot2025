@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.roadrunner;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.DualNum;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
@@ -21,13 +22,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.roadrunner.messages.TwoDeadWheelInputsMessage;
+import org.firstinspires.ftc.teamcode.messages.TwoDeadWheelInputsMessage;
 
-//@Config
+@Config
 public final class TwoDeadWheelLocalizer implements Localizer {
     public static class Params {
-        public double parYTicks = -4001.5408638757076; // y position of the parallel encoder (in tick units)
-        public double perpXTicks = 864.5412905604903; // x position of the perpendicular encoder (in tick units)
+        public double parYTicks = 0.0; // y position of the parallel encoder (in tick units)
+        public double perpXTicks = 0.0; // x position of the perpendicular encoder (in tick units)
     }
 
     public static Params PARAMS = new Params();
@@ -72,15 +73,6 @@ public final class TwoDeadWheelLocalizer implements Localizer {
     public Pose2d getPose() {
         return pose;
     }
-
-//    @NonNull
-//    @Override
-//    public List<Double> getWheelPositions() {
-//        return Arrays.asList(
-//                encoderTicksToInches(parallelEncoder.getCurrentPosition()) * X_MULTIPLIER,
-//                encoderTicksToInches(perpendicularEncoder.getCurrentPosition()) * Y_MULTIPLIER
-//        );
-//    }
 
     @Override
     public PoseVelocity2d update() {

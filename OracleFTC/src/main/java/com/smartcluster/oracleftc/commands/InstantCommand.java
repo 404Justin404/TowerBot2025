@@ -13,7 +13,7 @@ public class InstantCommand extends Command {
         subsystem=null;
     }
     public InstantCommand(Runnable runnable, Subsystem subsystem) {
-        this.runnable=runnable;
+        this.runnable = runnable;
         this.subsystem=subsystem;
     }
 

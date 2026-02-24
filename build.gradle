@@ -13,8 +13,10 @@ buildscript {
         mavenCentral()
         google()
     }
+
     dependencies {
         // Note for FTC Teams: Do not modify this yourself.
+        //noinspection AndroidGradlePluginVersion
         classpath 'com.android.tools.build:gradle:8.7.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -24,7 +26,7 @@ buildscript {
 // google() repository beginning with version 3.2 of the Android Gradle Plugin
 allprojects {
     repositories {
-    mavenCentral()
+        mavenCentral()
         google()
     }
 }
