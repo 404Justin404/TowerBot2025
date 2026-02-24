@@ -165,8 +165,8 @@ public class MecanumDrive  {
                 })
                 .build();
     }
-    public static PIDController rotationPID = new PIDController(1.5,0, 0.04);
-    public static Pose2d resetPose;
+    public static PIDController rotationPID = new PIDController(0.03,0.00005, 0.01);
+    public static Pose2d resetPose = new Pose2d(0, 0, 0);
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
 
@@ -176,7 +176,7 @@ public class MecanumDrive  {
                 .update(()->{
                     ProcessedGamepad.Joystick.JoystickData leftStick = gamepad.left_stick.get();
                     ProcessedGamepad.Joystick.JoystickData rightStick = gamepad.right_stick.get();
-                    if (gamepad.options.get() || gamepad.touchpad.get()) {
+                    if (gamepad.options.get()) {
                         currentPose= new com.acmerobotics.roadrunner.Pose2d(0, 0, Math.toRadians(90));
                         localizer.setPose(resetPose);
                         telemetry.addLine("LOCALIZER RESETED!");

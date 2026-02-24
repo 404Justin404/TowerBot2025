@@ -8,7 +8,6 @@ import com.smartcluster.oracleftc.commands.Command;
 import com.smartcluster.oracleftc.commands.InstantCommand;
 import com.smartcluster.oracleftc.hardware.OracleLynxVoltageSensor;
 import com.smartcluster.oracleftc.hardware.subsystem.Subsystem;
-import com.smartcluster.oracleftc.hardware.subsystem.SubsystemFlavor;
 
 public class Intake extends Subsystem {
 
@@ -26,34 +25,23 @@ public class Intake extends Subsystem {
     }
 
     public Command intake() {
-        return new InstantCommand(() ->
-                intakeMotor.setPower(1)
-        );
+        return new InstantCommand(() -> intakeMotor.setPower(1*Robot.nominalVoltage/voltageSensor.getVoltage()));
     }
 
     public Command outake() {
-        return new InstantCommand(() ->
-                intakeMotor.setPower(-1)
-        );
+        return new InstantCommand(() -> intakeMotor.setPower(-1*Robot.nominalVoltage/voltageSensor.getVoltage()));
+    }
+
+    public Command slowIntake() {
+        return new InstantCommand(() -> intakeMotor.setPower(0.1*Robot.nominalVoltage/voltageSensor.getVoltage()));
     }
 
     public Command stop() {
-        return new InstantCommand(() ->
-                intakeMotor.setPower(0)
-        );
+        return new InstantCommand(() -> intakeMotor.setPower(0));
     }
 
-    /**
-     * Set intake to run at a constant passive power
-     * Useful for keeping rings moving slowly during calibration
-     */
-    public void setPassivePower(double power) {
-        intakeMotor.setPower(power);
-    }
-
-
-    @Override
-    public SubsystemFlavor flavor() {
-        return SubsystemFlavor.ExpansionHubOnly;
-    }
+//    @Override
+//    public SubsystemFlavor flavor() {
+//        return SubsystemFlavor.ExpansionHubOnly;
+//    }
 }

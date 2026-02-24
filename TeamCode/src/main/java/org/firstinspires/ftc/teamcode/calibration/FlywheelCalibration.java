@@ -25,7 +25,7 @@ public class FlywheelCalibration extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry = new MultipleTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
-        telemetry.setMsTransmissionInterval(100);
+        telemetry.setMsTransmissionInterval(50);
         Turret flywheel =new Turret(this);
         waitForStart();
 
@@ -37,8 +37,10 @@ public class FlywheelCalibration extends LinearOpMode {
 
         while(opModeIsActive())
         {
-            for (LynxModule lynxModule : lynxModules)
+            for (LynxModule lynxModule : lynxModules) {
                 lynxModule.clearBulkCache();
+                lynxModule.getBulkData();
+            }
 
             flywheel.getCurrentVelocity();  // This reads the encoder position/velocity
 

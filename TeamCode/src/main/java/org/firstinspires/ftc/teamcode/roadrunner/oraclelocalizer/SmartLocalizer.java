@@ -129,12 +129,12 @@ public class SmartLocalizer extends Localizer {
 //
 //        if(BuildConfig.DEBUG)
 //        {
-            telemetry.addData("rawGyroAngle", AngleUnit.normalizeDegrees((-canandgyro.getVoltage()) * 360.0 / 3.3));
-            telemetry.addData("offsetGyroAngle", AngleUnit.normalizeDegrees((canandgyro.getVoltage()-gyroVoltageOffset) * 360.0 / 3.3));
+//            telemetry.addData("rawGyroAngle", AngleUnit.normalizeDegrees((-canandgyro.getVoltage()) * 360.0 / 3.3));
+//            telemetry.addData("offsetGyroAngle", AngleUnit.normalizeDegrees((canandgyro.getVoltage()-gyroVoltageOffset) * 360.0 / 3.3));
 //            telemetry.addData("pinpointFrequency", pinpoint.getFrequency());
 
-            telemetry.addData("parallelEncoder", parallelEncoder.getPositionAndVelocity().position);
-            telemetry.addData("perpendicularEncoder", perpendicularEncoder.getPositionAndVelocity().position);
+//            telemetry.addData("parallelEncoder", parallelEncoder.getPositionAndVelocity().position);
+//            telemetry.addData("perpendicularEncoder", perpendicularEncoder.getPositionAndVelocity().position);
 //        }
 
         double canandgyroHeading = Math.toRadians(AngleUnit.normalizeDegrees((canandgyro.getVoltage()-gyroVoltageOffset) * 360.0 / 3.3));

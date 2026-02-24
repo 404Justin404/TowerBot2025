@@ -22,25 +22,33 @@ import com.smartcluster.oracleftc.math.control.PIDController;
 import com.smartcluster.oracleftc.math.control.TrapezoidalMotionProfile;
 import com.smartcluster.oracleftc.math.filters.LowPassFilter;
 
-import org.firstinspires.ftc.teamcode.roadrunner.Localizer;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 @Config
 public class Turret extends Subsystem {
 
     // Hardware
     private final DcMotorImplEx shooter1, shooter2;
-    private final ServoImplEx mainhood, lever;
+    private final ServoImplEx servoHood, servoLever;
     private final OracleLynxVoltageSensor voltageSensor;
+
+    public MecanumDrive drive;
+    private Pose2d goal;
+
+    public AtomicBoolean enabledVel = new AtomicBoolean(true);
+    public AtomicBoolean isAboutToShot = new AtomicBoolean(false);
 
     // Motion profiles
     public static TrapezoidalMotionProfile hoodMotionProfile = new TrapezoidalMotionProfile(30, 30, 30);
     public static TrapezoidalMotionProfile leverMotionProfile = new TrapezoidalMotionProfile(30, 30, 30);
 
     // Servo actuators
-    public final ServoActuator hoodact, leveract;
+    public final ServoActuator hood, lever;
 
-    public static MotorFeedforward flywheelFeedforward = new MotorFeedforward(0.271502, 0.000204, 0);
-    public static PIDController flywheelPID = new PIDController(0.000500, 0.000030, 0, 0.5);
+    public static MotorFeedforward flywheelFeedforward = new MotorFeedforward(0.201502, 0.000154, 0);
+    public static PIDController flywheelPID = new PIDController(0.005, 0, 0.00035, 0.5);
     public static LowPassFilter velocityFilter = new LowPassFilter(0.5);
     private double targetVelocity = 0; // RPM
     public static double RPM_TOLERANCE = 100;
@@ -74,17 +82,17 @@ public class Turret extends Subsystem {
         shooter2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Initialize servos
-        mainhood = hardwareMap.get(ServoImplEx.class, "hood");
-        mainhood.setDirection(Servo.Direction.REVERSE);
-        lever = hardwareMap.get(ServoImplEx.class, "lever");
+        servoHood = hardwareMap.get(ServoImplEx.class, "hood");
+        servoHood.setDirection(Servo.Direction.REVERSE);
+        servoLever = hardwareMap.get(ServoImplEx.class, "lever");
 
         // Hood actuator
-        hoodact = new ServoActuator(this, "hood", hoodMotionProfile, mainhood) {
+        hood = new ServoActuator(this, "hood", hoodMotionProfile, servoHood) {
             @Override
             public Command reset() {
                 return new InstantCommand(() -> {
                     setTarget(HOOD_MIN_POSITION);
-                    mainhood.setPosition(this.target.get());
+                    servoHood.setPosition(this.target.get());
                 });
             }
 
@@ -97,24 +105,26 @@ public class Turret extends Subsystem {
         };
 
         // Lever actuator (blocks/releases flywheel)
-        leveract = new ServoActuator(this, "lever", leverMotionProfile, lever) {
+        lever = new ServoActuator(this, "lever", leverMotionProfile, servoLever) {
             @Override
             public Command reset() {
                 return new InstantCommand(() -> {
                     setTarget(LEVER_BLOCK_POSITION);
-                    lever.setPosition(this.target.get());
+                    servoLever.setPosition(this.target.get());
                 });
             }
-
             @Override
             public boolean setTarget(double target) {
-                // Lever only needs two positions: block or release
                 this.target.set(target);
                 return true;
             }
         };
+    }
 
-
+    public void setTracking(MecanumDrive drive, Pose2d goal)
+    {
+        this.drive = drive;
+        this.goal = goal;
     }
 
     /**
@@ -124,95 +134,117 @@ public class Turret extends Subsystem {
         return velocityFilter.update((shooter2.getVelocity() / 28) * 60);
     }
 
-    // Add this to your Turret.java class
     public void setRawPower(double power) {
         shooter1.setPower(power);
         shooter2.setPower(power);
     }
 
-    public void setRawPower1(double power) {
-        shooter1.setPower(power);
-    }
-
-    public void setRawPower2(double power) {
-        shooter2.setPower(power);
-    }
-
-    /**
-     * Set target flywheel velocity with safety limits
-     */
     public void setTargetVelocity(double velocity) {
         targetVelocity = Math.max(0, Math.min(6000, velocity));
     }
 
-    /**
-     * Block the flywheel with lever
-     */
+    public Supplier<Boolean> isInsideTheZone(Pose2d pose)
+    {
+        double BigTriangle = Math.abs(pose.position.x)-4;
+        double TinyTriangle = -Math.abs(pose.position.x)-7;
+        return () -> pose.position.y >= BigTriangle || pose.position.y <= TinyTriangle;
+    }
+
     public Command blockShooter() {
-        return new InstantCommand(() -> leveract.setTarget(LEVER_BLOCK_POSITION));
+        return lever.move(new AtomicReference<>(LEVER_BLOCK_POSITION));
     }
 
-    /**
-     * Release the lever to allow shooting
-     */
     public Command releaseShooter() {
-        return new InstantCommand(() -> leveract.setTarget(LEVER_RELEASE_POSITION));
+        return lever.move(new AtomicReference<>(LEVER_RELEASE_POSITION));
     }
 
-    /**
-     * Main update command - runs flywheel control and actuator updates
-     */
+    public double getDistanceToTarget(Pose2d currPos, com.acmerobotics.roadrunner.Pose2d corner){
+        double currentX = currPos.position.x;
+        double currentY = currPos.position.y;
+
+        double dx = corner.position.x - currentX;
+        double dy = corner.position.y - currentY;
+        return Math.sqrt(dx * dx + dy * dy) * 2.54; // returns distance in cm
+    }
+
+    public void setVelocityAndAngleByDist(Pose2d currPos, Pose2d corner){
+        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, corner) + VELOCITY_INTERCEPT;
+        double angle = getCurrentVelocity()*HOOD_SLOPE + HOOD_INTERCEPT;
+
+        // No longer in zone? You say so?! Stop wasting energy then!!! - R
+        enabledVel.set(isInsideTheZone(currPos).get());
+
+        setTargetVelocity(velocity);
+        hood.setTarget(angle);
+    }
+
+    public Command VelocityUpdate() {
+        return Command.builder()
+                .update(() -> {
+                    if (isAboutToShot.get()) setVelocityAndAngleByDist(drive.getPose().value(), goal);
+                    else {
+                        setTargetVelocity(800);
+                        hood.setTarget((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/2);
+                    }
+                })
+                .requires(this)
+                .build();
+    }
+
+    public Command WaitForRPM(double maxMilliseconds) {
+        ElapsedTime timer = new ElapsedTime();
+        return Command.builder()
+                .init(timer::reset)
+                .update(() -> {
+                    double error = targetVelocity - getCurrentVelocity();
+                    telemetry.addData("Velocity Error", error);
+//                    telemetry.addData("Target Velocity", targetVelocity);
+//                    telemetry.addData("Current Velocity", getCurrentVelocity());
+                })
+                .finished(() -> {
+                    double error = Math.abs(targetVelocity - getCurrentVelocity());
+                    return error <= RPM_TOLERANCE || timer.milliseconds() > maxMilliseconds;
+                })
+                .build();
+    }
+
     public Command update() {
         return new ParallelCommand(
-                hoodact.update(),
-                leveract.update(),
+                hood.update(),
                 Command.builder()
                         .update(() -> {
-                            double currentVelocity = getCurrentVelocity();
-                            double power = flywheelPID.update(targetVelocity, currentVelocity)
-                                    + flywheelFeedforward.update(targetVelocity, 0);
-                            power *= (Robot.nominalVoltage / voltageSensor.getVoltage());
+                            if (enabledVel.get()) {
+                                double currentVelocity = getCurrentVelocity(); //RPM
+                                double power = flywheelPID.update(targetVelocity, currentVelocity) + flywheelFeedforward.update(targetVelocity, 0);
+                                power = power * (Robot.nominalVoltage / voltageSensor.getVoltage());
 
-                            shooter1.setPower(power);
-                            shooter2.setPower(power);
+                                shooter1.setPower(power);
+                                shooter2.setPower(power);
+                            }
+                            else
+                            {
+                                shooter1.setPower(0);
+                                shooter2.setPower(0);
+                            }
+                            double error = Math.abs(targetVelocity - getCurrentVelocity());
+                            telemetry.addData("Velocity Error", error);
                         })
                         .requires(this)
                         .build()
         );
     }
 
-    /**
-     * Wait for flywheel to reach target RPM (with timeout)
-     */
-    public Command WaitForRPM(double maxMilliseconds) {
-        ElapsedTime timer = new ElapsedTime();
-        return Command.builder()
-                .init(timer::reset)
-                .update(() -> {
-                    double error = Math.abs(targetVelocity - getCurrentVelocity());
-                    telemetry.addData("Velocity Error", error);
-                    telemetry.addData("Target Velocity", targetVelocity);
-                    telemetry.addData("Current Velocity", getCurrentVelocity());
-                })
-                .finished(() -> {
-                    double error = Math.abs(targetVelocity - getCurrentVelocity());
-                    return error < RPM_TOLERANCE || timer.milliseconds() > maxMilliseconds;
-                })
-                .build();
-    }
-
-    /**
-     * Reset turret to safe starting position
-     */
     public Command reset() {
         return new SequentialCommand(
-                hoodact.reset(),
-                leveract.reset()
+                new InstantCommand(() -> enabledVel.set(true)),
+                new InstantCommand(() -> isAboutToShot.set(false)),
+                hood.reset(),
+                lever.reset()
         );
     }
 
-    @Override
-    public SubsystemFlavor flavor() {
-        return SubsystemFlavor.ExpansionHubOnly;
-    }
+//    @Override
+//    public SubsystemFlavor flavor() {
+//        return SubsystemFlavor.ExpansionHubOnly;
+//    }
 }

@@ -12,7 +12,7 @@ public class RedTeleOp extends BaseTeleOp {
         closeShoot = new Pose2d(12,12,Math.toRadians(-135));
         farShoot = new Pose2d(15, -56,Math.toRadians(-120));
         cornerCoordinate = new Pose2d(60,63, Math.toRadians(-45));
-        MecanumDrive.resetPose = new com.smartcluster.oracleftc.math.Pose2d(-62, -61, Math.toRadians(180));
+//        MecanumDrive.resetPose = new com.smartcluster.oracleftc.math.Pose2d(-62, -61, Math.toRadians(180));
 
         isRed=true;
     }

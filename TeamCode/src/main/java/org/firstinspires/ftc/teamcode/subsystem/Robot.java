@@ -1,30 +1,18 @@
 package org.firstinspires.ftc.teamcode.subsystem;
 //revizuire dupa completion
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.hardware.lynx.LynxNackException;
-import com.qualcomm.hardware.lynx.commands.LynxCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxFtdiResetControlCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetServoPulseWidthCommand;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotorImplEx;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.smartcluster.oracleftc.commands.Command;
-import com.smartcluster.oracleftc.commands.ConditionalCommand;
-import com.smartcluster.oracleftc.commands.InstantCommand;
 import com.smartcluster.oracleftc.commands.ParallelCommand;
 import com.smartcluster.oracleftc.commands.SequentialCommand;
-import com.smartcluster.oracleftc.commands.WaitCommand;
 import com.smartcluster.oracleftc.hardware.OracleLynxVoltageSensor;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 @Config
 public class Robot {
-    public static double nominalVoltage=12.0;
+    public static double nominalVoltage=10.0;
     private final OpMode opMode;
     private final boolean color;
     public final Turret flywheel;
@@ -61,12 +49,12 @@ public class Robot {
         }
     }
 
-
     public Command reset()
     {
         return new SequentialCommand(
                 new ParallelCommand(
-                        turret.reset()
+                        turret.reset(),
+                        intake.slowIntake()
                 )
         );
     }

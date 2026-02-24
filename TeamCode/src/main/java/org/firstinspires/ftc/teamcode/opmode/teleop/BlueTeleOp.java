@@ -12,7 +12,6 @@ public class BlueTeleOp extends BaseTeleOp {
         closeShoot = new Pose2d(-12,12,Math.toRadians(-45));
         farShoot = new Pose2d(-15, -56,Math.toRadians(298));
         endPose =  new Pose2d(-35, -56, Math.toRadians(90));
-        MecanumDrive.resetPose = new com.smartcluster.oracleftc.math.Pose2d(62, -61, Math.toRadians(0));
-
+//        MecanumDrive.resetPose = new com.smartcluster.oracleftc.math.Pose2d(62, -61, Math.toRadians(0));
     }
 }

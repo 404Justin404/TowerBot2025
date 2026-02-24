@@ -73,9 +73,9 @@ public class BaseTeleOp extends LinearOpMode {
                                 robot.reset(),
                                 new InstantCommand(() -> {
                                     robot.turret.setTargetVelocity(1000);
-                                    robot.turret.hoodact.setTarget(0.0);
+                                    robot.turret.hood.setTarget(0.0);
                                     robot.turret.blockShooter();
-                                    robot.intake.stop();
+                                    robot.intake.slowIntake();
                                 })
                         ))
 // IDLE -> INTAKE: Start intake when left bumper pressed
@@ -83,14 +83,14 @@ public class BaseTeleOp extends LinearOpMode {
                         robot.intake.intake())
 
                 .transition(TeleOpState.INTAKE, TeleOpState.IDLE, driverGamepad.left_bumper.up(),
-                        robot.intake.stop())
+                        robot.intake.slowIntake())
 
 // IDLE -> OUTTAKE: Manual outtake with right bumper
                 .transition(TeleOpState.IDLE, TeleOpState.OUTTAKE, driverGamepad.circle.down(),
                         robot.intake.outake())
 
                 .transition(TeleOpState.OUTTAKE, TeleOpState.IDLE, driverGamepad.circle.up(),
-                        robot.intake.stop())
+                        robot.intake.slowIntake())
 
 //                RIGHT BUMPER ESTE BOOST
 
@@ -98,44 +98,44 @@ public class BaseTeleOp extends LinearOpMode {
                 .transition(TeleOpState.IDLE, TeleOpState.FAR_SHOOTING, driverGamepad.dpad_up.pressed(),
                         new ParallelCommand(
                                 new InstantCommand(() -> robot.turret.setTargetVelocity(farvelo)),//3300
-                                new InstantCommand(() -> robot.turret.hoodact.setTarget(farhood))
+                                new InstantCommand(() -> robot.turret.hood.setTarget(farhood))
                         ))
 
                 // IDLE -> CLOSE_SHOOTING: Prepare for close shooting
                 .transition(TeleOpState.IDLE, TeleOpState.CLOSE_SHOOTING, driverGamepad.dpad_down.pressed(),
-                        new SequentialCommand(
+                        new ParallelCommand(
                                 new InstantCommand(() -> robot.turret.setTargetVelocity(closevelo)),//2600
-                                new InstantCommand(() -> robot.turret.hoodact.setTarget(closehood))
+                                new InstantCommand(() -> robot.turret.hood.setTarget(closehood))
                         ))
 
 
                 .transition(TeleOpState.SHOOT, TeleOpState.IDLE, () -> driverGamepad.right_trigger.get() < 0.1,
                         new ParallelCommand(
-                            robot.turret.blockShooter(),robot.intake.stop(),
+                            robot.turret.blockShooter(),robot.intake.slowIntake(),
                             new InstantCommand(() -> robot.turret.setTargetVelocity(1000)),
-                            new InstantCommand(() -> robot.turret.hoodact.setTarget(0))
+                            new InstantCommand(() -> robot.turret.hood.setTarget(0))
                         )
                 )
 
                 .transition(TeleOpState.CLOSE_SHOOTING, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() > 0.1,
-                        new ParallelCommand(
+                        new SequentialCommand(
                                 robot.turret.WaitForRPM(waitforrpm),
                                 robot.turret.releaseShooter(),
                                 robot.intake.intake(),
-                                new InstantCommand(() -> robot.turret.hoodact.setTarget(closehood+0.02)),
+                                new InstantCommand(() -> robot.turret.hood.setTarget(closehood+0.02)),
                                 new WaitCommand(100),
-                                new InstantCommand(() -> robot.turret.hoodact.setTarget(closehood+0.03))
+                                new InstantCommand(() -> robot.turret.hood.setTarget(closehood+0.03))
                                 )
                 )
 
                 .transition(TeleOpState.FAR_SHOOTING, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() > 0.1,
-                        new ParallelCommand(
+                        new SequentialCommand(
                                 robot.turret.WaitForRPM(waitforrpm),
                                 robot.turret.releaseShooter(),
                                 robot.intake.intake(),
-                                new InstantCommand(() -> robot.turret.hoodact.setTarget(farhood+0.02)),
+                                new InstantCommand(() -> robot.turret.hood.setTarget(farhood+0.02)),
                                 new WaitCommand(100),
-                                new InstantCommand(() -> robot.turret.hoodact.setTarget(farhood+0.03))
+                                new InstantCommand(() -> robot.turret.hood.setTarget(farhood+0.03))
                         )
                 )
 
@@ -150,10 +150,10 @@ public class BaseTeleOp extends LinearOpMode {
                                 robot.lift.liftUp(),
                                 robot.turret.blockShooter(),
                                 new InstantCommand(() -> {
-                                robot.turret.setRawPower(0);
-                                robot.turret.hoodact.setTarget(0.0);
+//                                robot.turret.setRawPower(0);
+                                robot.turret.hood.setTarget(0.0);
                                 }),
-                                robot.intake.stop()
+                                robot.intake.slowIntake()
                         ))
 
 
