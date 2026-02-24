@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.subsystem.Lift;
 
 @Config
 @TeleOp(group = "Calibration")
-public class liftCalibration extends LinearOpMode {
+public class LiftCalibration extends LinearOpMode {
 
     public static double liftPower = 0.0;
 

@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystem;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.AccelConstraint;
@@ -30,6 +31,7 @@ import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 import com.acmerobotics.roadrunner.ftc.LazyHardwareMapImu;
 import com.acmerobotics.roadrunner.ftc.LazyImu;
 import com.acmerobotics.roadrunner.ftc.LynxFirmware;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.LynxVoltageSensor;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -37,6 +39,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 import com.smartcluster.oracleftc.commands.Command;
 import com.smartcluster.oracleftc.hardware.subsystem.Subsystem;
 import com.smartcluster.oracleftc.math.Pose2d;
@@ -55,14 +59,16 @@ import org.firstinspires.ftc.teamcode.roadrunner.messages.MecanumCommandMessage;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.PoseMessage;
 import org.firstinspires.ftc.teamcode.roadrunner.oraclelocalizer.SmartLocalizer;
 
+
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Config
-public class MecanumDrive {
+public class MecanumDrive  {
 
     public DcMotorEx frontRightMotor, backRightMotor, frontLeftMotor, backLeftMotor;
     public LynxVoltageSensor voltageSensor;
@@ -90,13 +96,13 @@ public class MecanumDrive {
 
 
         com.acmerobotics.roadrunner.Pose2d t = pose.value();
-        Vector2d p = t.position;
+        com.acmerobotics.roadrunner.Vector2d p = t.position;
         c.setStrokeWidth(1);
         c.strokeCircle(p.x, p.y, ROBOT_RADIUS);
 
-        Vector2d halfv = t.heading.vec().times(0.5 * ROBOT_RADIUS);
-        Vector2d p1 = p.plus(halfv);
-        Vector2d p2 = p1.plus(halfv);
+        com.acmerobotics.roadrunner.Vector2d halfv = t.heading.vec().times(0.5 * ROBOT_RADIUS);
+        com.acmerobotics.roadrunner.Vector2d p1 = p.plus(halfv);
+        com.acmerobotics.roadrunner.Vector2d p2 = p1.plus(halfv);
         c.strokeLine(p1.x, p1.y, p2.x, p2.y);
         c.setStroke("#0000FF");
         c.strokeLine(p.x, p.y, p.x+pose.velocity().value().linearVel.x, p.y);
@@ -159,7 +165,7 @@ public class MecanumDrive {
                 })
                 .build();
     }
-    public static PIDController rotationPID = new PIDController(1.5,0, 0.03);
+    public static PIDController rotationPID = new PIDController(1.5,0, 0.04);
     public static Pose2d resetPose;
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
@@ -178,7 +184,7 @@ public class MecanumDrive {
 
 
                     double botHeading = localizer.getPose().heading.value().log();
-                    double boost = (gamepad.right_bumper.get() ? 0.8 : 0.5);
+                    double boost = (gamepad.right_bumper.get() ? 0.9 : 0.4);
 
                     double rx;
 
@@ -235,7 +241,7 @@ public class MecanumDrive {
         // TODO: fill in these values based on
         //   see https://ftc-docs.firstinspires.org/en/latest/programming_resources/imu/imu.html?highlight=imu#physical-hub-mounting
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
                 RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
@@ -263,9 +269,10 @@ public class MecanumDrive {
         public double lateralGain = 7;
         public double headingGain = 8; // shared with turn
 
-        public double axialVelGain = 0.6;
-        public double lateralVelGain = 0.6;
-        public double headingVelGain = 0.6;
+        public double axialVelGain = 0.7;
+        public double lateralVelGain = 0.7;
+        public double headingVelGain = 0.7;
+        // shared with turn
     }
 
     public static Params PARAMS = new Params();
@@ -294,12 +301,6 @@ public class MecanumDrive {
     private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
     private final DownsampledWriter mecanumCommandWriter = new DownsampledWriter("MECANUM_COMMAND", 50_000_000);
     private final Telemetry telemetry;
-
-    public MecanumDrive(OpMode opMode)
-    {
-        this(opMode.hardwareMap, opMode.telemetry);
-    }
-
 
     public MecanumDrive(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry=telemetry;
@@ -618,7 +619,7 @@ public class MecanumDrive {
         localizer.update();
         Twist2dDual<Time> twist = lastTwist;
         PoseVelocity2d velocity = new PoseVelocity2d(
-                new Vector2d(
+                new com.acmerobotics.roadrunner.Vector2d(
                         twist.line.x.get(1),
                         twist.line.y.get(1)
                 ),
