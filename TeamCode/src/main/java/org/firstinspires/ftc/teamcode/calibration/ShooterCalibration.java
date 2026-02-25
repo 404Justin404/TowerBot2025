@@ -15,6 +15,7 @@ import com.smartcluster.oracleftc.math.filters.MovingAverageFilter;
 import com.smartcluster.oracleftc.utils.Performance;
 import com.smartcluster.oracleftc.utils.ProcessedGamepad;
 
+import org.firstinspires.ftc.teamcode.opmode.teleop.DistTeleOp;
 import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystem.Robot;
 
@@ -60,7 +61,8 @@ public class ShooterCalibration extends LinearOpMode {
                 // INIT -> IDLE: Reset robot to starting state
                 .transition(TeleOpState.INIT, TeleOpState.IDLE, () -> true,
                         new SequentialCommand(
-                                robot.reset()
+                                robot.reset(),
+                                new InstantCommand(robot.turret::blockShooter)
                         ))
 
                 .transition(TeleOpState.IDLE, TeleOpState.INTAKE, driverGamepad.left_bumper.down(),
@@ -75,9 +77,11 @@ public class ShooterCalibration extends LinearOpMode {
                 .transition(TeleOpState.OUTTAKE, TeleOpState.IDLE, driverGamepad.circle.up(),
                         robot.intake.slowIntake())
 
-                .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, driverGamepad.dpad_up.pressed(),
-                        new InstantCommand(() -> robot.turret.enabledVel.set(true)))
-
+                .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, driverGamepad.dpad_down.pressed(),
+                        new SequentialCommand(
+                                new InstantCommand(() -> robot.turret.enabledVel.set(true)),
+                                robot.intake.intake()
+                        ))
                 .transition(TeleOpState.PRESHOOT, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() > 0.5,
                         new SequentialCommand(
                                 robot.turret.WaitForRPM(2000),
@@ -128,7 +132,7 @@ public class ShooterCalibration extends LinearOpMode {
             // Telemetry
             telemetry.addData("Current State", CurrentState);
             telemetry.addData("Turret Velocity", robot.turret.getCurrentVelocity());
-
+            telemetry.addData("Distance ", robot.turret.getDistanceToTarget(robot.drive.getPose().value(), cornerCoordinate));
             telemetry.addData("x", robot.drive.localizer.getPose().position.x.get(0));
             telemetry.addData("y", robot.drive.localizer.getPose().position.y.get(0));
             telemetry.addData("heading (deg)", Math.toDegrees(robot.drive.localizer.getPose().heading.log().get(0)));

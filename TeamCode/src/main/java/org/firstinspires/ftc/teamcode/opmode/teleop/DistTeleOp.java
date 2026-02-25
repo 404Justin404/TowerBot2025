@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystem.Robot;
 
 @Config
-@TeleOp(group = "TeleOp")
+//@TeleOp(group = "TeleOp")
 public class DistTeleOp extends LinearOpMode {
     protected Pose2d cornerCoordinate = new Pose2d(60,63, Math.toRadians(-45));
     protected boolean isRed = true;
@@ -63,7 +63,10 @@ public class DistTeleOp extends LinearOpMode {
                 .transition(TeleOpState.INIT, TeleOpState.IDLE, this::opModeIsActive,
                         new SequentialCommand(
                                 robot.reset(),
-                                new InstantCommand(() -> robot.turret.setTracking(robot.drive, cornerCoordinate))
+                                new InstantCommand(() ->{
+                                    robot.turret.setTracking(robot.drive, cornerCoordinate);
+//                                    robot.turret.setTargetVelocity(1000);
+                                })
                         ))
 
                 .transition(TeleOpState.IDLE, TeleOpState.INTAKE, driverGamepad.left_bumper.down(),
@@ -79,7 +82,10 @@ public class DistTeleOp extends LinearOpMode {
                         robot.intake.slowIntake())
 
                 .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, driverGamepad.dpad_down.pressed(),
-                        new InstantCommand(() -> robot.turret.isAboutToShot.set(true)))
+                        new SequentialCommand(
+                                robot.intake.intake(),
+                                new InstantCommand(()->robot.turret.isAboutToShot.set(true))
+                        ))
 
                 .transition(TeleOpState.PRESHOOT, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() >= 0.5,
                         new SequentialCommand(
@@ -92,8 +98,8 @@ public class DistTeleOp extends LinearOpMode {
                         new SequentialCommand(
                                 new InstantCommand(() ->
                                 {
-                                    robot.turret.enabledVel.set(false);
                                     robot.turret.isAboutToShot.set(false);
+//                                    robot.turret.setTargetVelocity(1000);
                                     robot.turret.blockShooter();
                                 }),
                                 robot.intake.slowIntake()

@@ -54,12 +54,15 @@ public class Turret extends Subsystem {
     public static double RPM_TOLERANCE = 100;
 
 
-    private static final double VELOCITY_SLOPE = 5.135525;
-    private static final double VELOCITY_INTERCEPT = 2091.049436;
+    // Velocity linear regression constants
+// Formula: velocity = VELOCITY_SLOPE * distance_cm + VELOCITY_INTERCEPT
+    private static final double VELOCITY_SLOPE = 4.397090;
+    private static final double VELOCITY_INTERCEPT = 1444.533484;
 
     // Hood angle linear regression constants
-    private static final double HOOD_SLOPE = -0.000015;
-    private static final double HOOD_INTERCEPT = 0.083449;
+// Formula: hood = HOOD_SLOPE * velocity + HOOD_INTERCEPT
+    private static final double HOOD_SLOPE = 0.000179;
+    private static final double HOOD_INTERCEPT = -0.319426;
 
     private boolean inZone;
 
@@ -85,40 +88,6 @@ public class Turret extends Subsystem {
         servoHood = hardwareMap.get(ServoImplEx.class, "hood");
         servoHood.setDirection(Servo.Direction.REVERSE);
         servoLever = hardwareMap.get(ServoImplEx.class, "lever");
-
-//        // Hood actuator
-//        hood = new ServoActuator(this, "hood", hoodMotionProfile, servoHood) {
-//            @Override
-//            public Command reset() {
-//                return new InstantCommand(() -> {
-//                    setTarget(HOOD_MIN_POSITION);
-//                    servoHood.setPosition(this.target.get());
-//                });
-//            }
-//
-//            @Override
-//            public boolean setTarget(double target) {
-//                target = Math.max(HOOD_MIN_POSITION, Math.min(HOOD_MAX_POSITION, target));
-//                this.target.set(target);
-//                return true;
-//            }
-//        };
-//
-//        // Lever actuator (blocks/releases flywheel)
-//        lever = new ServoActuator(this, "lever", leverMotionProfile, servoLever) {
-//            @Override
-//            public Command reset() {
-//                return new InstantCommand(() -> {
-//                    setTarget(LEVER_BLOCK_POSITION);
-//                    servoLever.setPosition(this.target.get());
-//                });
-//            }
-//            @Override
-//            public boolean setTarget(double target) {
-//                this.target.set(target);
-//                return true;
-//            }
-//        };
     }
 
     public void setTracking(MecanumDrive drive, Pose2d goal)
@@ -178,7 +147,9 @@ public class Turret extends Subsystem {
         double angle = getCurrentVelocity()*HOOD_SLOPE + HOOD_INTERCEPT;
 
         // No longer in zone? You say so?! Stop wasting energy then!!! - R
-        enabledVel.set(isInsideTheZone(currPos).get());
+//        enabledVel.set(isInsideTheZone(currPos).get());
+        enabledVel.set(true);
+
 
         setTargetVelocity(velocity);
         setHoodAngle(angle);
@@ -189,8 +160,8 @@ public class Turret extends Subsystem {
                 .update(() -> {
                     if (isAboutToShot.get()) setVelocityAndAngleByDist(drive.getPose().value(), goal);
                     else {
-                        setTargetVelocity(800);
-                        setHoodAngle((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/2);
+                        setTargetVelocity(1000);
+                        setHoodAngle((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/3);
                     }
                 })
                 .requires(this)

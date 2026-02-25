@@ -65,7 +65,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Config
 public class MecanumDrive  {
@@ -73,6 +72,8 @@ public class MecanumDrive  {
     public DcMotorEx frontRightMotor, backRightMotor, frontLeftMotor, backLeftMotor;
     public LynxVoltageSensor voltageSensor;
     public SmartLocalizer localizer;
+
+    public static double SOTM_INFLUENCE = 2;
 
     public Command update()
     {
@@ -190,14 +191,17 @@ public class MecanumDrive  {
 
                     if(gamepad.left_trigger.get() > 0.7)
                     {
+                        // SOTM PART ------
                         Vector2d vel = getPose().velocity().linearVel.value();
-                        vel = vel.div(2.5);
+                        vel = vel.div(SOTM_INFLUENCE);
+                        // ------------------
+
                         Vector2d dir = getPose().value().position.minus(corner.position).plus(vel);
 //                        dir=dir.div(dir.norm());
                         double angle = Math.atan2(dir.y, dir.x);
 
                         rx = rotationPID.update(0, AngleUnit.normalizeRadians(angle-botHeading));
-                    } else rx = rightStick.x * boost;
+                    } else rx = -rightStick.x * boost;
 
                     double y,x;
 

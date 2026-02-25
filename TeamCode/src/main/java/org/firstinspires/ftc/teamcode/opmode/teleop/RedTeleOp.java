@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 
-@TeleOp(group = "TeleOp")
+//@TeleOp(group = "TeleOp")
 public class RedTeleOp extends BaseTeleOp {
     {
         endPose = new Pose2d(61.25, -61.25, Math.toRadians(0));

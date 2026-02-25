@@ -96,17 +96,23 @@ public class BaseTeleOp extends LinearOpMode {
 
                 // IDLE -> FAR_SHOOTING: Prepare for far shooting
                 .transition(TeleOpState.IDLE, TeleOpState.FAR_SHOOTING, driverGamepad.dpad_up.pressed(),
-                        new InstantCommand(() -> {
-                            robot.turret.setTargetVelocity(farvelo);
-                            robot.turret.setHoodAngle(farhood);
-                        }))
+                        new SequentialCommand(
+                                robot.intake.intake(),
+                                new InstantCommand(() -> {
+                                    robot.turret.setTargetVelocity(farvelo);
+                                    robot.turret.setHoodAngle(farhood);
+
+                                })))
 
                 // IDLE -> CLOSE_SHOOTING: Prepare for close shooting
                 .transition(TeleOpState.IDLE, TeleOpState.CLOSE_SHOOTING, driverGamepad.dpad_down.pressed(),
-                                new InstantCommand(() -> {
-                                    robot.turret.setTargetVelocity(closevelo);
-                                    robot.turret.setHoodAngle(closehood);
-                                }))
+                                new SequentialCommand(
+                                        robot.intake.intake(),
+                                    new InstantCommand(() -> {
+                                        robot.turret.setTargetVelocity(closevelo);
+                                        robot.turret.setHoodAngle(closehood);
+
+                                })))
 
                 .transition(TeleOpState.CLOSE_SHOOTING, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() >= 0.5,
                         new SequentialCommand(
