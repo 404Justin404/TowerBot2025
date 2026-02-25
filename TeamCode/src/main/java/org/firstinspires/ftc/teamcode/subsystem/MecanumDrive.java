@@ -73,7 +73,8 @@ public class MecanumDrive  {
     public LynxVoltageSensor voltageSensor;
     public SmartLocalizer localizer;
 
-    public static double SOTM_INFLUENCE = 2;
+    public static double SOTM_INFLUENCE = 0.5;
+    public static boolean enableOrientation = false;
 
     public Command update()
     {
@@ -166,7 +167,7 @@ public class MecanumDrive  {
                 })
                 .build();
     }
-    public static PIDController rotationPID = new PIDController(0.03,0.00005, 0.01);
+    public static PIDController rotationPID = new PIDController(1.5,0.00000, 0.09);
     public static Pose2d resetPose = new Pose2d(0, 0, 0);
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
@@ -189,19 +190,25 @@ public class MecanumDrive  {
 
                     double rx;
 
-                    if(gamepad.left_trigger.get() > 0.7)
+                    if(gamepad.left_trigger.get() > 0.5 || enableOrientation)
                     {
                         // SOTM PART ------
                         Vector2d vel = getPose().velocity().linearVel.value();
-                        vel = vel.div(SOTM_INFLUENCE);
+                        vel = vel.div(vel.norm());
+                        vel = vel.times(SOTM_INFLUENCE);
                         // ------------------
 
                         Vector2d dir = getPose().value().position.minus(corner.position).plus(vel);
 //                        dir=dir.div(dir.norm());
-                        double angle = Math.atan2(dir.y, dir.x);
+                        double angle = Math.atan2(dir.y, dir.x) + Math.PI; // Don't aim with your back bro
 
                         rx = rotationPID.update(0, AngleUnit.normalizeRadians(angle-botHeading));
-                    } else rx = -rightStick.x * boost;
+
+                        telemetry.addData("Orientation Err", AngleUnit.normalizeRadians(angle-botHeading));
+
+                    } else rx = rightStick.x * boost;
+
+                    rx = -rx; // Thanks SmartLocalizer!!! I like it when you inverse my robot's rx!
 
                     double y,x;
 
@@ -238,6 +245,15 @@ public class MecanumDrive  {
                     backLeftMotor.setPower(backLeftPower);
                 })
                 .build();
+    }
+
+    public com.acmerobotics.roadrunner.Pose2d getCornerOffsetVelocity(com.acmerobotics.roadrunner.Pose2d corner)
+    {
+        Vector2d vel = getPose().velocity().linearVel.value();
+        vel = vel.div(SOTM_INFLUENCE);
+
+        com.acmerobotics.roadrunner.Pose2d offsetPose = new com.acmerobotics.roadrunner.Pose2d (corner.position.x + vel.x, corner.position.y + vel.y, corner.heading.log());
+        return offsetPose;
     }
 
     public static class Params {

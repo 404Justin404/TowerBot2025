@@ -143,7 +143,11 @@ public class Turret extends Subsystem {
     }
 
     public void setVelocityAndAngleByDist(Pose2d currPos, Pose2d corner){
-        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, corner) + VELOCITY_INTERCEPT;
+        Pose2d offsetCorner = drive.getCornerOffsetVelocity(corner);
+
+        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, offsetCorner) + VELOCITY_INTERCEPT;
+
+//        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, corner) + VELOCITY_INTERCEPT;
         double angle = getCurrentVelocity()*HOOD_SLOPE + HOOD_INTERCEPT;
 
         // No longer in zone? You say so?! Stop wasting energy then!!! - R
@@ -186,7 +190,10 @@ public class Turret extends Subsystem {
     }
 
     public Command update() {
-        return new ParallelCommand(
+        return new SequentialCommand(
+//                new InstantCommand(() -> {
+//                    servoLever.setPosition(servoLever.getPosition()); // Do not let me go!!!
+//                }),
                 Command.builder()
                         .update(() -> {
                             if (enabledVel.get()) {
@@ -213,6 +220,8 @@ public class Turret extends Subsystem {
     public Command reset() {
         return new SequentialCommand(
                 new InstantCommand(() -> {
+                    servoHood.setPosition(0);
+                    blockShooter();
                     enabledVel.set(true);
                     isAboutToShot.set(false);
                 })

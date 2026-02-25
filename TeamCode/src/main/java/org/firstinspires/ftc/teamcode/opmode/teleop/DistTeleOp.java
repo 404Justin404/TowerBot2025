@@ -18,7 +18,7 @@ import com.smartcluster.oracleftc.utils.ProcessedGamepad;
 import org.firstinspires.ftc.teamcode.calibration.ShooterCalibration;
 import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystem.Robot;
-
+import com.bylazar.telemetry.PanelsTelemetry;
 @Config
 //@TeleOp(group = "TeleOp")
 public class DistTeleOp extends LinearOpMode {
