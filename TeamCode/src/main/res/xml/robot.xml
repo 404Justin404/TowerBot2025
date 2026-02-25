@@ -22,7 +22,7 @@
 
         <LynxModule name="Expansion Hub 2" port="2">
             <goBILDA5202SeriesMotor name="shooter1" port="0" />
-            <goBILDA5202SeriesMotor name="shooter2" port="1" />
+            <goBILDA5202SeriesMotor name="shooter2" port="1" /> <!-- Flywheel encoder -->
             <goBILDA5202SeriesMotor name="intake" port="2" />
         </LynxModule>
     </LynxUsbDevice>

@@ -73,7 +73,7 @@ public class MecanumDrive  {
     public LynxVoltageSensor voltageSensor;
     public SmartLocalizer localizer;
 
-    public static double SOTM_INFLUENCE = 0.5;
+    public static double SOTM_INFLUENCE = 0.4;
     public static boolean enableOrientation = false;
 
     public Command update()
@@ -167,7 +167,7 @@ public class MecanumDrive  {
                 })
                 .build();
     }
-    public static PIDController rotationPID = new PIDController(1.5,0.00000, 0.09);
+    public static PIDController rotationPID = new PIDController(2.5,0.00000, 0.09);
     public static Pose2d resetPose = new Pose2d(0, 0, 0);
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
@@ -194,7 +194,7 @@ public class MecanumDrive  {
                     {
                         // SOTM PART ------
                         Vector2d vel = getPose().velocity().linearVel.value();
-                        vel = vel.div(vel.norm());
+//                        vel = vel.div(vel.norm());
                         vel = vel.times(SOTM_INFLUENCE);
                         // ------------------
 
@@ -205,6 +205,9 @@ public class MecanumDrive  {
                         rx = rotationPID.update(0, AngleUnit.normalizeRadians(angle-botHeading));
 
                         telemetry.addData("Orientation Err", AngleUnit.normalizeRadians(angle-botHeading));
+                        telemetry.addData("RobotVel x", vel.x);
+                        telemetry.addData("RobotVel y", vel.y);
+
 
                     } else rx = rightStick.x * boost;
 

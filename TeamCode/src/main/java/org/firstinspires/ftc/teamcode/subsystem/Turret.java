@@ -165,7 +165,7 @@ public class Turret extends Subsystem {
                     if (isAboutToShot.get()) setVelocityAndAngleByDist(drive.getPose().value(), goal);
                     else {
                         setTargetVelocity(1000);
-                        setHoodAngle((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/3);
+                        setHoodAngle((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/3*2);
                     }
                 })
                 .requires(this)
@@ -179,8 +179,6 @@ public class Turret extends Subsystem {
                 .update(() -> {
                     double error = targetVelocity - getCurrentVelocity();
                     telemetry.addData("Velocity Error", error);
-//                    telemetry.addData("Target Velocity", targetVelocity);
-//                    telemetry.addData("Current Velocity", getCurrentVelocity());
                 })
                 .finished(() -> {
                     double error = Math.abs(targetVelocity - getCurrentVelocity());
@@ -191,11 +189,12 @@ public class Turret extends Subsystem {
 
     public Command update() {
         return new SequentialCommand(
-//                new InstantCommand(() -> {
-//                    servoLever.setPosition(servoLever.getPosition()); // Do not let me go!!!
-//                }),
+                new InstantCommand(() -> {
+                    servoLever.setPosition(servoLever.getPosition()); // Do not let me go!!!
+                }),
                 Command.builder()
                         .update(() -> {
+                            telemetry.addData("ServoLever Pos", servoLever.getPosition());
                             if (enabledVel.get()) {
                                 double currentVelocity = getCurrentVelocity(); //RPM
                                 double power = flywheelPID.update(targetVelocity, currentVelocity) + flywheelFeedforward.update(targetVelocity, 0);

@@ -8,6 +8,7 @@ import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 @TeleOp(group = "TeleOp")
 public class BlueDistTeleOp extends DistTeleOp{
     {
-        MecanumDrive.resetPose = new com.smartcluster.oracleftc.math.Pose2d(64.3, -61, Math.toRadians(-90));
+        cornerCoordinate = new Pose2d(-62,62, Math.toRadians(360-135));
+        MecanumDrive.resetPose = new com.smartcluster.oracleftc.math.Pose2d(62, -61, Math.toRadians(-90));
     }
 }
