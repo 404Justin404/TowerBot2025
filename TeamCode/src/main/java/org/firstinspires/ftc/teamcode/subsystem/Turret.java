@@ -41,11 +41,11 @@ public class Turret extends Subsystem {
     public AtomicBoolean isAboutToShot = new AtomicBoolean(false);
 
     // Motion profiles
-    public static TrapezoidalMotionProfile hoodMotionProfile = new TrapezoidalMotionProfile(30, 30, 30);
-    public static TrapezoidalMotionProfile leverMotionProfile = new TrapezoidalMotionProfile(30, 30, 30);
-
-    // Servo actuators
-    public final ServoActuator hood, lever;
+//    public static TrapezoidalMotionProfile hoodMotionProfile = new TrapezoidalMotionProfile(30, 30, 30);
+//    public static TrapezoidalMotionProfile leverMotionProfile = new TrapezoidalMotionProfile(30, 30, 30);
+//
+//    // Servo actuators
+//    public final ServoActuator hood, lever;
 
     public static MotorFeedforward flywheelFeedforward = new MotorFeedforward(0.201502, 0.000154, 0);
     public static PIDController flywheelPID = new PIDController(0.005, 0, 0.00035, 0.5);
@@ -86,39 +86,39 @@ public class Turret extends Subsystem {
         servoHood.setDirection(Servo.Direction.REVERSE);
         servoLever = hardwareMap.get(ServoImplEx.class, "lever");
 
-        // Hood actuator
-        hood = new ServoActuator(this, "hood", hoodMotionProfile, servoHood) {
-            @Override
-            public Command reset() {
-                return new InstantCommand(() -> {
-                    setTarget(HOOD_MIN_POSITION);
-                    servoHood.setPosition(this.target.get());
-                });
-            }
-
-            @Override
-            public boolean setTarget(double target) {
-                target = Math.max(HOOD_MIN_POSITION, Math.min(HOOD_MAX_POSITION, target));
-                this.target.set(target);
-                return true;
-            }
-        };
-
-        // Lever actuator (blocks/releases flywheel)
-        lever = new ServoActuator(this, "lever", leverMotionProfile, servoLever) {
-            @Override
-            public Command reset() {
-                return new InstantCommand(() -> {
-                    setTarget(LEVER_BLOCK_POSITION);
-                    servoLever.setPosition(this.target.get());
-                });
-            }
-            @Override
-            public boolean setTarget(double target) {
-                this.target.set(target);
-                return true;
-            }
-        };
+//        // Hood actuator
+//        hood = new ServoActuator(this, "hood", hoodMotionProfile, servoHood) {
+//            @Override
+//            public Command reset() {
+//                return new InstantCommand(() -> {
+//                    setTarget(HOOD_MIN_POSITION);
+//                    servoHood.setPosition(this.target.get());
+//                });
+//            }
+//
+//            @Override
+//            public boolean setTarget(double target) {
+//                target = Math.max(HOOD_MIN_POSITION, Math.min(HOOD_MAX_POSITION, target));
+//                this.target.set(target);
+//                return true;
+//            }
+//        };
+//
+//        // Lever actuator (blocks/releases flywheel)
+//        lever = new ServoActuator(this, "lever", leverMotionProfile, servoLever) {
+//            @Override
+//            public Command reset() {
+//                return new InstantCommand(() -> {
+//                    setTarget(LEVER_BLOCK_POSITION);
+//                    servoLever.setPosition(this.target.get());
+//                });
+//            }
+//            @Override
+//            public boolean setTarget(double target) {
+//                this.target.set(target);
+//                return true;
+//            }
+//        };
     }
 
     public void setTracking(MecanumDrive drive, Pose2d goal)
@@ -134,11 +134,6 @@ public class Turret extends Subsystem {
         return velocityFilter.update((shooter2.getVelocity() / 28) * 60);
     }
 
-    public void setRawPower(double power) {
-        shooter1.setPower(power);
-        shooter2.setPower(power);
-    }
-
     public void setTargetVelocity(double velocity) {
         targetVelocity = Math.max(0, Math.min(6000, velocity));
     }
@@ -150,12 +145,23 @@ public class Turret extends Subsystem {
         return () -> pose.position.y >= BigTriangle || pose.position.y <= TinyTriangle;
     }
 
-    public Command blockShooter() {
-        return lever.move(new AtomicReference<>(LEVER_BLOCK_POSITION));
+    public void blockShooter() {
+        servoLever.setPosition(LEVER_BLOCK_POSITION);
     }
 
-    public Command releaseShooter() {
-        return lever.move(new AtomicReference<>(LEVER_RELEASE_POSITION));
+    public void releaseShooter() {
+        servoLever.setPosition(LEVER_RELEASE_POSITION);
+    }
+
+    public void setHoodAngle(double angle)
+    {
+        double target = Math.max(HOOD_MIN_POSITION, Math.min(HOOD_MAX_POSITION, angle));
+        servoHood.setPosition(target);
+    }
+
+    public double getHoodAngle()
+    {
+        return servoHood.getPosition();
     }
 
     public double getDistanceToTarget(Pose2d currPos, com.acmerobotics.roadrunner.Pose2d corner){
@@ -175,7 +181,7 @@ public class Turret extends Subsystem {
         enabledVel.set(isInsideTheZone(currPos).get());
 
         setTargetVelocity(velocity);
-        hood.setTarget(angle);
+        setHoodAngle(angle);
     }
 
     public Command VelocityUpdate() {
@@ -184,7 +190,7 @@ public class Turret extends Subsystem {
                     if (isAboutToShot.get()) setVelocityAndAngleByDist(drive.getPose().value(), goal);
                     else {
                         setTargetVelocity(800);
-                        hood.setTarget((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/2);
+                        setHoodAngle((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/2);
                     }
                 })
                 .requires(this)
@@ -210,7 +216,6 @@ public class Turret extends Subsystem {
 
     public Command update() {
         return new ParallelCommand(
-                hood.update(),
                 Command.builder()
                         .update(() -> {
                             if (enabledVel.get()) {
@@ -236,10 +241,10 @@ public class Turret extends Subsystem {
 
     public Command reset() {
         return new SequentialCommand(
-                new InstantCommand(() -> enabledVel.set(true)),
-                new InstantCommand(() -> isAboutToShot.set(false)),
-                hood.reset(),
-                lever.reset()
+                new InstantCommand(() -> {
+                    enabledVel.set(true);
+                    isAboutToShot.set(false);
+                })
         );
     }
 

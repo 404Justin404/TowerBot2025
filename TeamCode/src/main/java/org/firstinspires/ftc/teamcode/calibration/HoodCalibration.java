@@ -25,15 +25,11 @@ public class HoodCalibration extends LinearOpMode {
 
         waitForStart();
 
-        scheduler.schedule(turret.hood.update());
-
         while(opModeIsActive()) {
             telemetry.addData("Target Position", targetPosition);
-            telemetry.addData("Current Position", turret.hood.getTarget());
-            telemetry.addData("Instructions", "Use FTC Dashboard to adjust 'targetPosition'");
-            telemetry.addData("Range", "0.0 to 1.0");
+            telemetry.addData("Current Position", turret.getHoodAngle());
 
-            turret.hood.setTarget(targetPosition);
+            turret.setHoodAngle(targetPosition);
 
             scheduler.update();
             telemetry.update();

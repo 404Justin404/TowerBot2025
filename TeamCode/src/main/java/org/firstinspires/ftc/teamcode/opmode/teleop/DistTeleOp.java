@@ -15,6 +15,7 @@ import com.smartcluster.oracleftc.math.filters.MovingAverageFilter;
 import com.smartcluster.oracleftc.utils.Performance;
 import com.smartcluster.oracleftc.utils.ProcessedGamepad;
 
+import org.firstinspires.ftc.teamcode.calibration.ShooterCalibration;
 import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystem.Robot;
 
@@ -80,17 +81,22 @@ public class DistTeleOp extends LinearOpMode {
                 .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, driverGamepad.dpad_down.pressed(),
                         new InstantCommand(() -> robot.turret.isAboutToShot.set(true)))
 
-                .transition(TeleOpState.PRESHOOT, TeleOpState.SHOOT, driverGamepad.cross.pressed(),
+                .transition(TeleOpState.PRESHOOT, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() >= 0.5,
                         new SequentialCommand(
                                 robot.turret.WaitForRPM(2000),
-                                robot.turret.releaseShooter(),
+                                new InstantCommand(robot.turret::releaseShooter),
                                 robot.intake.intake()
                         ))
 
-                .transition(TeleOpState.SHOOT, TeleOpState.IDLE, () -> CurrentState == TeleOpState.SHOOT,
-                        new ParallelCommand(
-                                robot.turret.blockShooter(),robot.intake.slowIntake(),
-                                new InstantCommand(() -> robot.turret.isAboutToShot.set(false))
+                .transition(TeleOpState.SHOOT, TeleOpState.IDLE, () -> driverGamepad.right_trigger.get() < 0.5,
+                        new SequentialCommand(
+                                new InstantCommand(() ->
+                                {
+                                    robot.turret.enabledVel.set(false);
+                                    robot.turret.isAboutToShot.set(false);
+                                    robot.turret.blockShooter();
+                                }),
+                                robot.intake.slowIntake()
                         ))
 
                 .build(scheduler);

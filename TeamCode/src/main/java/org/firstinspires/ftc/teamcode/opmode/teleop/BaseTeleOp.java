@@ -73,7 +73,7 @@ public class BaseTeleOp extends LinearOpMode {
                                 robot.reset(),
                                 new InstantCommand(() -> {
                                     robot.turret.setTargetVelocity(1000);
-                                    robot.turret.hood.setTarget(0.0);
+                                    robot.turret.setHoodAngle(0.0);
                                     robot.turret.blockShooter();
                                     robot.intake.slowIntake();
                                 })
@@ -96,48 +96,49 @@ public class BaseTeleOp extends LinearOpMode {
 
                 // IDLE -> FAR_SHOOTING: Prepare for far shooting
                 .transition(TeleOpState.IDLE, TeleOpState.FAR_SHOOTING, driverGamepad.dpad_up.pressed(),
-                        new ParallelCommand(
-                                new InstantCommand(() -> robot.turret.setTargetVelocity(farvelo)),//3300
-                                new InstantCommand(() -> robot.turret.hood.setTarget(farhood))
-                        ))
+                        new InstantCommand(() -> {
+                            robot.turret.setTargetVelocity(farvelo);
+                            robot.turret.setHoodAngle(farhood);
+                        }))
 
                 // IDLE -> CLOSE_SHOOTING: Prepare for close shooting
                 .transition(TeleOpState.IDLE, TeleOpState.CLOSE_SHOOTING, driverGamepad.dpad_down.pressed(),
-                        new ParallelCommand(
-                                new InstantCommand(() -> robot.turret.setTargetVelocity(closevelo)),//2600
-                                new InstantCommand(() -> robot.turret.hood.setTarget(closehood))
-                        ))
+                                new InstantCommand(() -> {
+                                    robot.turret.setTargetVelocity(closevelo);
+                                    robot.turret.setHoodAngle(closehood);
+                                }))
 
-
-                .transition(TeleOpState.SHOOT, TeleOpState.IDLE, () -> driverGamepad.right_trigger.get() < 0.1,
-                        new ParallelCommand(
-                            robot.turret.blockShooter(),robot.intake.slowIntake(),
-                            new InstantCommand(() -> robot.turret.setTargetVelocity(1000)),
-                            new InstantCommand(() -> robot.turret.hood.setTarget(0))
-                        )
-                )
-
-                .transition(TeleOpState.CLOSE_SHOOTING, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() > 0.1,
+                .transition(TeleOpState.CLOSE_SHOOTING, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() >= 0.5,
                         new SequentialCommand(
                                 robot.turret.WaitForRPM(waitforrpm),
-                                robot.turret.releaseShooter(),
+                                new InstantCommand(robot.turret::releaseShooter),
                                 robot.intake.intake(),
-                                new InstantCommand(() -> robot.turret.hood.setTarget(closehood+0.02)),
+                                new InstantCommand(() -> robot.turret.setHoodAngle(closehood+0.02)),
                                 new WaitCommand(100),
-                                new InstantCommand(() -> robot.turret.hood.setTarget(closehood+0.03))
+                                new InstantCommand(() -> robot.turret.setHoodAngle(closehood+0.03))
                                 )
                 )
 
-                .transition(TeleOpState.FAR_SHOOTING, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() > 0.1,
+                .transition(TeleOpState.FAR_SHOOTING, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() >= 0.5,
                         new SequentialCommand(
                                 robot.turret.WaitForRPM(waitforrpm),
-                                robot.turret.releaseShooter(),
+                                new InstantCommand(robot.turret::releaseShooter),
                                 robot.intake.intake(),
-                                new InstantCommand(() -> robot.turret.hood.setTarget(farhood+0.02)),
+                                new InstantCommand(() -> robot.turret.setHoodAngle(farhood+0.02)),
                                 new WaitCommand(100),
-                                new InstantCommand(() -> robot.turret.hood.setTarget(farhood+0.03))
+                                new InstantCommand(() -> robot.turret.setHoodAngle(farhood+0.03))
                         )
                 )
+
+                .transition(TeleOpState.SHOOT, TeleOpState.IDLE, () -> driverGamepad.right_trigger.get() < 0.5,
+                        new SequentialCommand(
+                                new InstantCommand(() -> {
+                                    robot.turret.blockShooter();
+                                    robot.turret.setTargetVelocity(1000);
+                                    robot.turret.setHoodAngle(0);
+                                }),
+                                robot.intake.slowIntake()
+                        ))
 
                 // Emergency stop
 //                .transition(TeleOpState.FAR_SHOOTING, TeleOpState.IDLE, driverGamepad.square.pressed(),
@@ -146,14 +147,13 @@ public class BaseTeleOp extends LinearOpMode {
 //                        new InstantCommand(() -> robot.turret.setTargetVelocity(500)))
 
                 .transition(TeleOpState.IDLE, TeleOpState.LIFT, driverGamepad.dpad_right.down(),
-                        new ParallelCommand(
-                                robot.lift.liftUp(),
-                                robot.turret.blockShooter(),
+                        new SequentialCommand(
                                 new InstantCommand(() -> {
-//                                robot.turret.setRawPower(0);
-                                robot.turret.hood.setTarget(0.0);
+                                    robot.turret.setHoodAngle(0.0);
+                                    robot.turret.blockShooter();
                                 }),
-                                robot.intake.slowIntake()
+                                robot.intake.stop(),
+                                robot.lift.liftUp()
                         ))
 
 

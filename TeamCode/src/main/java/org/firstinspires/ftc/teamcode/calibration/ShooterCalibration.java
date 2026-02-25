@@ -81,14 +81,17 @@ public class ShooterCalibration extends LinearOpMode {
                 .transition(TeleOpState.PRESHOOT, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() > 0.5,
                         new SequentialCommand(
                                 robot.turret.WaitForRPM(2000),
-                                robot.turret.releaseShooter(),
+                                new InstantCommand(robot.turret::releaseShooter),
                                 robot.intake.intake()
                         ))
 
                 .transition(TeleOpState.SHOOT, TeleOpState.IDLE, () -> driverGamepad.right_trigger.get() < 0.5,
-                        new ParallelCommand(
-                                new InstantCommand(() -> robot.turret.enabledVel.set(false)),
-                                robot.turret.blockShooter(),
+                        new SequentialCommand(
+                                new InstantCommand(() ->
+                                {
+                                    robot.turret.enabledVel.set(false);
+                                    robot.turret.blockShooter();
+                                }),
                                 robot.intake.slowIntake()
                         ))
 
@@ -120,7 +123,7 @@ public class ShooterCalibration extends LinearOpMode {
             CurrentState = fsm.getCurrentState();
 
             robot.turret.setTargetVelocity(velocityTarget);
-            robot.turret.hood.setTarget(hoodAngle);
+            robot.turret.setHoodAngle(hoodAngle);
 
             // Telemetry
             telemetry.addData("Current State", CurrentState);
