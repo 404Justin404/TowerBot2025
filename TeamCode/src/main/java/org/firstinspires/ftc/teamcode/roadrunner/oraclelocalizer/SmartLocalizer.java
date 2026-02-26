@@ -3,13 +3,13 @@ package org.firstinspires.ftc.teamcode.roadrunner.oraclelocalizer;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
-import com.smartcluster.oracleftc.hardware.OracleGoBildaPinpoint;
 import com.smartcluster.oracleftc.math.DualNum;
 import com.smartcluster.oracleftc.math.Pose2d;
 import com.smartcluster.oracleftc.math.Pose2dDual;
@@ -23,6 +23,9 @@ import com.smartcluster.oracleftc.math.filters.LowPassFilter;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -88,16 +91,19 @@ public class SmartLocalizer extends Localizer {
     public static long pinpointRejectionThreshold = 5;
     private final AnalogInput canandgyro;
     private double gyroVoltageOffset;
-    public final OracleGoBildaPinpoint pinpoint;
+    public final GoBildaPinpointDriver pinpoint;
     public final com.acmerobotics.roadrunner.ftc.Encoder parallelEncoder, perpendicularEncoder;
     private final LowPassFilter headingVelFilter= new LowPassFilter(0.35);
     private final Telemetry telemetry;
+
+
+
     public SmartLocalizer(HardwareMap hardwareMap, Telemetry telemetry)
     {
         super(hardwareMap, telemetry);
         this.telemetry=telemetry;
         canandgyro = hardwareMap.get(AnalogInput.class, "canandgyro");
-        pinpoint = hardwareMap.get(OracleGoBildaPinpoint.class, "pinpoint");
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         parallelEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "frontRight")));
         parallelEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
         lastParallel = new DualNum<>(parallelEncoder.getPositionAndVelocity().position);
@@ -107,9 +113,9 @@ public class SmartLocalizer extends Localizer {
         lastPerpendicular = new DualNum<>(perpendicularEncoder.getPositionAndVelocity().position);
         gyroVoltageOffset = canandgyro.getVoltage();
 
-        pinpoint.setEncoderResolution(19.89436789);
-        pinpoint.setEncoderDirections(OracleGoBildaPinpoint.EncoderDirection.REVERSED, OracleGoBildaPinpoint.EncoderDirection.FORWARD);
-        pinpoint.setOffsets(-parallelOffset, perpendicularOffset);
+        pinpoint.setEncoderResolution(19.89436789, DistanceUnit.MM);
+        pinpoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        pinpoint.setOffsets(-parallelOffset, perpendicularOffset, DistanceUnit.MM);
 
         pinpoint.resetPosAndIMU();
 
@@ -118,6 +124,18 @@ public class SmartLocalizer extends Localizer {
         } catch (InterruptedException e) {
             RobotLog.logStackTrace(e);
         }
+    }
+
+    public Pose2dDual<Time> getPinpointPosition()
+    {
+        return new Pose2dDual<Time>(
+                new Vector2dDual<Time>(
+                        new DualNum<>(pinpoint.getPosX(DistanceUnit.MM), pinpoint.getVelX(DistanceUnit.MM)),
+                        new DualNum<>(pinpoint.getPosY(DistanceUnit.MM), pinpoint.getVelY(DistanceUnit.MM))
+                ).div(25.4),
+                Rotation2dDual.exp(new DualNum<>(pinpoint.getHeading(AngleUnit.DEGREES), pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)))
+        );
+
     }
 
     private DualNum<Time> lastParallel, lastPerpendicular;
@@ -153,8 +171,8 @@ public class SmartLocalizer extends Localizer {
 
         Twist2dDual<Time> updateTwist = new Twist2dDual<>(
                 new Vector2dDual<>(
-                    parallelDelta.minus(headingDelta.log().times(parallelOffset*(1/mmPerTick))).times(mmPerTick),
-                    perpendicularDelta.minus(headingDelta.log().times(perpendicularOffset*(1/mmPerTick))).times(mmPerTick)
+                        parallelDelta.minus(headingDelta.log().times(parallelOffset*(1/mmPerTick))).times(mmPerTick),
+                        perpendicularDelta.minus(headingDelta.log().times(perpendicularOffset*(1/mmPerTick))).times(mmPerTick)
                 ).div(25.4),
                 headingDelta.log()
         );
@@ -164,7 +182,7 @@ public class SmartLocalizer extends Localizer {
         if(pinpointTime.milliseconds()>pinpointTimeDelta)
         {
             pinpoint.update();
-            Pose2dDual<Time> newPose = pinpoint.getPose();
+            Pose2dDual<Time> newPose = getPinpointPosition();
 
             if(((Double.isNaN(newPose.heading.log().get(0)) ||
                     Double.isNaN(newPose.position.x.get(0)) ||
@@ -181,7 +199,7 @@ public class SmartLocalizer extends Localizer {
 //        telemetry.addData("internalHeading", pose.heading.value().log());
 
         // Pinpoint debug, comment when not needed
-        Pose2dDual<Time> pinPose = pinpoint.getPose();
+        Pose2dDual<Time> pinPose = getPinpointPosition();
 
         telemetry.addData("Pinpoint X", pinPose.position.x.get(0));
         telemetry.addData("Pinpoint Y", pinPose.position.y.get(0));
@@ -198,6 +216,7 @@ public class SmartLocalizer extends Localizer {
     public void setPose(Pose2dDual<Time> pose) {
         super.setPose(pose);
         gyroVoltageOffset=canandgyro.getVoltage()-pose.heading.log().get(0) * 3.3/360;
-        pinpoint.setPose(pose.value());
+//        Pose2D translatedPose = new Pose2D(DistanceUnit.INCH, pose.position.x.get(0), pose.position.y.get(0), AngleUnit.RADIANS, pose.heading.log().get(0));
+//        pinpoint.setPosition(translatedPose);
     }
 }

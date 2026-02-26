@@ -53,6 +53,8 @@ import com.smartcluster.oracleftc.utils.ProcessedGamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.roadrunner.Drawing;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.DriveCommandMessage;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.MecanumCommandMessage;
@@ -179,6 +181,8 @@ public class MecanumDrive  {
                     if (gamepad.options.get()) {
 //                        currentPose = new com.acmerobotics.roadrunner.Pose2d(0, 0, Math.toRadians(90));
                         localizer.setPose(resetPose);
+                        Pose2D translatedPose = new Pose2D(DistanceUnit.INCH, resetPose.position.x, resetPose.position.y, AngleUnit.RADIANS, resetPose.heading.log());
+                        localizer.pinpoint.setPosition(translatedPose);
                         telemetry.addLine("LOCALIZER RESETED!");
                     }
 
@@ -246,18 +250,14 @@ public class MecanumDrive  {
                 .build();
     }
 
-    public void updatePinpoint()
-    {
-        localizer.pinpoint.setPose(resetPose);
-    }
-
-    public com.acmerobotics.roadrunner.Pose2d getCornerOffsetVelocity(com.acmerobotics.roadrunner.Pose2d corner)
-    {
-        Vector2d vel = getPose().velocity().linearVel.value();
-        vel = vel.div(SOTM_INFLUENCE);
-
-        return new com.acmerobotics.roadrunner.Pose2d (corner.position.x - vel.x, corner.position.y - vel.y, corner.heading.log());
-    }
+// Actual do not.
+//    public com.acmerobotics.roadrunner.Pose2d getCornerOffsetVelocity(com.acmerobotics.roadrunner.Pose2d corner)
+//    {
+//        Vector2d vel = getPose().velocity().linearVel.value();
+//        vel = vel.div(SOTM_INFLUENCE);
+//
+//        return new com.acmerobotics.roadrunner.Pose2d (corner.position.x - vel.x, corner.position.y - vel.y, corner.heading.log());
+//    }
 
     public static class Params {
         // IMU orientation
