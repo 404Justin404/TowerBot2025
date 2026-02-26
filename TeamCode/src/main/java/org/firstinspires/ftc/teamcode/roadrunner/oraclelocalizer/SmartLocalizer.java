@@ -13,6 +13,7 @@ import com.smartcluster.oracleftc.hardware.OracleGoBildaPinpoint;
 import com.smartcluster.oracleftc.math.DualNum;
 import com.smartcluster.oracleftc.math.Pose2d;
 import com.smartcluster.oracleftc.math.Pose2dDual;
+import com.smartcluster.oracleftc.math.PoseVelocity2d;
 import com.smartcluster.oracleftc.math.Rotation2d;
 import com.smartcluster.oracleftc.math.Rotation2dDual;
 import com.smartcluster.oracleftc.math.Time;
@@ -87,7 +88,7 @@ public class SmartLocalizer extends Localizer {
     public static long pinpointRejectionThreshold = 5;
     private final AnalogInput canandgyro;
     private double gyroVoltageOffset;
-    private final OracleGoBildaPinpoint pinpoint;
+    public final OracleGoBildaPinpoint pinpoint;
     public final com.acmerobotics.roadrunner.ftc.Encoder parallelEncoder, perpendicularEncoder;
     private final LowPassFilter headingVelFilter= new LowPassFilter(0.35);
     private final Telemetry telemetry;
@@ -158,6 +159,8 @@ public class SmartLocalizer extends Localizer {
                 headingDelta.log()
         );
 
+
+
         if(pinpointTime.milliseconds()>pinpointTimeDelta)
         {
             pinpoint.update();
@@ -177,6 +180,13 @@ public class SmartLocalizer extends Localizer {
         pose = new Pose2dDual<>(pose.value().plus(updateTwist.value()), pose.value().plus(updateTwist.value()).times(updateTwist.velocity()));
 //        telemetry.addData("internalHeading", pose.heading.value().log());
 
+        // Pinpoint debug, comment when not needed
+        Pose2dDual<Time> pinPose = pinpoint.getPose();
+
+        telemetry.addData("Pinpoint X", pinPose.position.x.get(0));
+        telemetry.addData("Pinpoint Y", pinPose.position.y.get(0));
+        telemetry.addData("Pinpoint HEADING", Math.toDegrees(pinPose.heading.log().get(0)));
+
         lastHeading=Rotation2dDual.constant(heading,1);
         lastParallel=new DualNum<>(parallel.get(0));
         lastPerpendicular=new DualNum<>(perpendicular.get(0));
@@ -189,13 +199,5 @@ public class SmartLocalizer extends Localizer {
         super.setPose(pose);
         gyroVoltageOffset=canandgyro.getVoltage()-pose.heading.log().get(0) * 3.3/360;
         pinpoint.setPose(pose.value());
-    }
-
-    public void setPosition(Pose2dDual<Time> pose) {
-        Pose2d newPose = new Pose2d(pose.position.x.get(0), pose.position.y.get(0), getPose().heading.value().log());
-
-        super.setPose(newPose);
-        gyroVoltageOffset=canandgyro.getVoltage()-pose.heading.log().get(0) * 3.3/360;
-        pinpoint.setPose(newPose);
     }
 }

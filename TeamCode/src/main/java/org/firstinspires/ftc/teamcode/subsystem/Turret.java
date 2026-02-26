@@ -150,7 +150,7 @@ public class Turret extends Subsystem {
 //        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, offsetCorner) + VELOCITY_INTERCEPT;
 
         double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, corner) + VELOCITY_INTERCEPT;
-        double angle = getCurrentVelocity()*HOOD_SLOPE + HOOD_INTERCEPT;
+        double angle = getCurrentVelocity() * HOOD_SLOPE + HOOD_INTERCEPT;
 
         // No longer in zone? You say so?! Stop wasting energy then!!! - R
 //        enabledVel.set(isInsideTheZone(currPos).get());
@@ -167,7 +167,7 @@ public class Turret extends Subsystem {
                     if (isAboutToShot.get()) setVelocityAndAngleByDist(drive.getPose().value(), goal);
                     else {
                         setTargetVelocity(1000);
-                        setHoodAngle((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/3*2);
+                        setHoodAngle((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/3);
                     }
                 })
                 .requires(this)

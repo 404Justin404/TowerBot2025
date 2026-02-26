@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.subsystem.Robot;
 //@TeleOp(group = "TeleOp")
 public class DistTeleOp extends LinearOpMode {
     protected Pose2d cornerCoordinate = new Pose2d(60,63, Math.toRadians(-45));
+    protected Pose2d resetPose = new Pose2d(0, 0, 0);
     protected boolean isRed = true;
     private final CommandScheduler scheduler = new CommandScheduler();
 

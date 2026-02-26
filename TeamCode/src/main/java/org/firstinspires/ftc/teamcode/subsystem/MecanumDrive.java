@@ -65,6 +65,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Config
 public class MecanumDrive  {
@@ -167,19 +168,16 @@ public class MecanumDrive  {
                 })
                 .build();
     }
-    public static PIDController rotationPID = new PIDController(2.3,0.00000, 0.26);
-    public static Pose2d resetPose = new Pose2d(0, 0, 0);
+    public static PIDController rotationPID = new PIDController(2.2,0.00000, 0.27);
+    public static Pose2d resetPose = new Pose2d(50, 0, 0);
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
-
-        AtomicBoolean TurnToCornerMode=new AtomicBoolean();
-        TurnToCornerMode.set(lockedIn);
         return new Command.CommandBuilder()
                 .update(()->{
                     ProcessedGamepad.Joystick.JoystickData leftStick = gamepad.left_stick.get();
                     ProcessedGamepad.Joystick.JoystickData rightStick = gamepad.right_stick.get();
                     if (gamepad.options.get()) {
-                        currentPose= new com.acmerobotics.roadrunner.Pose2d(0, 0, Math.toRadians(90));
+//                        currentPose = new com.acmerobotics.roadrunner.Pose2d(0, 0, Math.toRadians(90));
                         localizer.setPose(resetPose);
                         telemetry.addLine("LOCALIZER RESETED!");
                     }
@@ -190,17 +188,16 @@ public class MecanumDrive  {
 
                     double rx;
 
-                    if(gamepad.left_trigger.get() > 0.5 || enableOrientation)
+                    if(gamepad.left_trigger.get() >= 0.5 || enableOrientation)
                     {
                         // SOTM PART ------
                         Vector2d vel = getPose().velocity().linearVel.value();
-//                        vel = vel.div(vel.norm());
                         vel = vel.times(SOTM_INFLUENCE);
                         // ------------------
 
-                        Vector2d dir = getPose().value().position.minus(corner.position).plus(vel);
+                        Vector2d dir = corner.position.minus(getPose().value().position).minus(vel);
 //                        dir=dir.div(dir.norm());
-                        double angle = Math.atan2(dir.y, dir.x) + Math.PI; // Don't aim with your back bro
+                        double angle = Math.atan2(dir.y, dir.x);
 
                         rx = rotationPID.update(0, AngleUnit.normalizeRadians(angle-botHeading));
 
@@ -249,13 +246,17 @@ public class MecanumDrive  {
                 .build();
     }
 
+    public void updatePinpoint()
+    {
+        localizer.pinpoint.setPose(resetPose);
+    }
+
     public com.acmerobotics.roadrunner.Pose2d getCornerOffsetVelocity(com.acmerobotics.roadrunner.Pose2d corner)
     {
         Vector2d vel = getPose().velocity().linearVel.value();
         vel = vel.div(SOTM_INFLUENCE);
 
-        com.acmerobotics.roadrunner.Pose2d offsetPose = new com.acmerobotics.roadrunner.Pose2d (corner.position.x + vel.x, corner.position.y + vel.y, corner.heading.log());
-        return offsetPose;
+        return new com.acmerobotics.roadrunner.Pose2d (corner.position.x - vel.x, corner.position.y - vel.y, corner.heading.log());
     }
 
     public static class Params {
