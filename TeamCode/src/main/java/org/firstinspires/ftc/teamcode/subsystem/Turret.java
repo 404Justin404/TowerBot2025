@@ -68,8 +68,8 @@ public class Turret extends Subsystem {
 
     public static double HOOD_MIN_POSITION = 0.0;
     public static double HOOD_MAX_POSITION = 0.45;
-    public static double LEVER_BLOCK_POSITION = 0.0;  // Position that blocks the flywheel
-    public static double LEVER_RELEASE_POSITION = 0.15; // Position that allows shooting
+    public static double LEVER_BLOCK_POSITION = 0.05;  // Position that blocks the flywheel
+    public static double LEVER_RELEASE_POSITION = 0.147; // Position that allows shooting
 
     public Turret(OpMode opMode) {
         super(opMode);
@@ -143,11 +143,10 @@ public class Turret extends Subsystem {
     }
 
     public void setVelocityAndAngleByDist(Pose2d currPos, Pose2d corner){
-        Pose2d offsetCorner = drive.getCornerOffsetVelocity(corner);
+//        Pose2d offsetCorner = drive.getCornerOffsetVelocity(corner);
+//        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, offsetCorner) + VELOCITY_INTERCEPT;
 
-        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, offsetCorner) + VELOCITY_INTERCEPT;
-
-//        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, corner) + VELOCITY_INTERCEPT;
+        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, corner) + VELOCITY_INTERCEPT;
         double angle = getCurrentVelocity()*HOOD_SLOPE + HOOD_INTERCEPT;
 
         // No longer in zone? You say so?! Stop wasting energy then!!! - R
@@ -188,32 +187,27 @@ public class Turret extends Subsystem {
     }
 
     public Command update() {
-        return new SequentialCommand(
-                new InstantCommand(() -> {
-                    servoLever.setPosition(servoLever.getPosition()); // Do not let me go!!!
-                }),
-                Command.builder()
-                        .update(() -> {
-                            telemetry.addData("ServoLever Pos", servoLever.getPosition());
-                            if (enabledVel.get()) {
-                                double currentVelocity = getCurrentVelocity(); //RPM
-                                double power = flywheelPID.update(targetVelocity, currentVelocity) + flywheelFeedforward.update(targetVelocity, 0);
-                                power = power * (Robot.nominalVoltage / voltageSensor.getVoltage());
+            return Command.builder()
+                    .update(() -> {
+                        telemetry.addData("ServoLever Pos", servoLever.getPosition());
+                        if (enabledVel.get()) {
+                            double currentVelocity = getCurrentVelocity(); //RPM
+                            double power = flywheelPID.update(targetVelocity, currentVelocity) + flywheelFeedforward.update(targetVelocity, 0);
+                            power = power * (Robot.nominalVoltage / voltageSensor.getVoltage());
 
-                                shooter1.setPower(power);
-                                shooter2.setPower(power);
-                            }
-                            else
-                            {
-                                shooter1.setPower(0);
-                                shooter2.setPower(0);
-                            }
-                            double error = Math.abs(targetVelocity - getCurrentVelocity());
-                            telemetry.addData("Velocity Error", error);
-                        })
-                        .requires(this)
-                        .build()
-        );
+                            shooter1.setPower(power);
+                            shooter2.setPower(power);
+                        }
+                        else
+                        {
+                            shooter1.setPower(0);
+                            shooter2.setPower(0);
+                        }
+                        double error = Math.abs(targetVelocity - getCurrentVelocity());
+                        telemetry.addData("Velocity Error", error);
+                    })
+                    .requires(this)
+                    .build();
     }
 
     public Command reset() {
