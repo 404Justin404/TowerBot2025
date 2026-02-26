@@ -68,8 +68,8 @@ public class Turret extends Subsystem {
 
     public static double HOOD_MIN_POSITION = 0.0;
     public static double HOOD_MAX_POSITION = 0.45;
-    public static double LEVER_BLOCK_POSITION = 0.05;  // Position that blocks the flywheel
-    public static double LEVER_RELEASE_POSITION = 0.147; // Position that allows shooting
+    public static double LEVER_BLOCK_POSITION = 0.15;  // Position that blocks the flywheel
+    public static double LEVER_RELEASE_POSITION = 0.0; // Position that allows shooting
 
     public Turret(OpMode opMode) {
         super(opMode);
@@ -122,6 +122,9 @@ public class Turret extends Subsystem {
         servoLever.setPosition(LEVER_RELEASE_POSITION);
     }
 
+    public void setLeverAngle(double angle){
+        servoLever.setPosition(angle);
+    }
     public void setHoodAngle(double angle)
     {
         double target = Math.max(HOOD_MIN_POSITION, Math.min(HOOD_MAX_POSITION, angle));

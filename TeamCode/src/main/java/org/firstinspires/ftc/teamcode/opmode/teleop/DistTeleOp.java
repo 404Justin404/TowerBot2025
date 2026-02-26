@@ -66,6 +66,7 @@ public class DistTeleOp extends LinearOpMode {
                                 new InstantCommand(() ->{
                                     robot.turret.setTracking(robot.drive, cornerCoordinate);
 //                                    robot.turret.setTargetVelocity(1000);
+                                    robot.turret.blockShooter();
                                 })
                         ))
 
