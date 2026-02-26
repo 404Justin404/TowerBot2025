@@ -8,14 +8,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.smartcluster.oracleftc.commands.CommandScheduler;
 import com.smartcluster.oracleftc.commands.InstantCommand;
-import com.smartcluster.oracleftc.commands.ParallelCommand;
 import com.smartcluster.oracleftc.commands.SequentialCommand;
 import com.smartcluster.oracleftc.fsm.FSM;
 import com.smartcluster.oracleftc.math.filters.MovingAverageFilter;
 import com.smartcluster.oracleftc.utils.Performance;
 import com.smartcluster.oracleftc.utils.ProcessedGamepad;
 
-import org.firstinspires.ftc.teamcode.opmode.teleop.DistTeleOp;
 import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystem.Robot;
 
@@ -69,13 +67,13 @@ public class ShooterCalibration extends LinearOpMode {
                         robot.intake.intake())
 
                 .transition(TeleOpState.INTAKE, TeleOpState.IDLE, driverGamepad.left_bumper.up(),
-                        robot.intake.slowIntake())
+                        robot.intake.idleIntake())
 
                 .transition(TeleOpState.IDLE, TeleOpState.OUTTAKE, driverGamepad.circle.down(),
                         robot.intake.outake())
 
                 .transition(TeleOpState.OUTTAKE, TeleOpState.IDLE, driverGamepad.circle.up(),
-                        robot.intake.slowIntake())
+                        robot.intake.idleIntake())
 
                 .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, driverGamepad.dpad_down.pressed(),
                         new SequentialCommand(
@@ -96,7 +94,7 @@ public class ShooterCalibration extends LinearOpMode {
                                     robot.turret.enabledVel.set(false);
                                     robot.turret.blockShooter();
                                 }),
-                                robot.intake.slowIntake()
+                                robot.intake.idleIntake()
                         ))
 
 //                .transition(TeleOpState.IDLE, TeleOpState.LIFT, driverGamepad.dpad_right.down(),

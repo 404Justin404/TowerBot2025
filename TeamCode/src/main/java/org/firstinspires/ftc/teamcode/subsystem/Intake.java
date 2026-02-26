@@ -33,6 +33,10 @@ public class Intake extends Subsystem {
     }
 
     public Command slowIntake() {
+        return new InstantCommand(() -> intakeMotor.setPower(0.6*Robot.nominalVoltage/voltageSensor.getVoltage()));
+    }
+
+    public Command idleIntake() {
         return new InstantCommand(() -> intakeMotor.setPower(0.20*Robot.nominalVoltage/voltageSensor.getVoltage()));
     }
 

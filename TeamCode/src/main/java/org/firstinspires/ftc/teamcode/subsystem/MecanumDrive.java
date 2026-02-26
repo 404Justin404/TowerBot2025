@@ -167,7 +167,7 @@ public class MecanumDrive  {
                 })
                 .build();
     }
-    public static PIDController rotationPID = new PIDController(2.5,0.00000, 0.09);
+    public static PIDController rotationPID = new PIDController(2.3,0.00000, 0.26);
     public static Pose2d resetPose = new Pose2d(0, 0, 0);
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
@@ -207,7 +207,6 @@ public class MecanumDrive  {
                         telemetry.addData("Orientation Err", AngleUnit.normalizeRadians(angle-botHeading));
                         telemetry.addData("RobotVel x", vel.x);
                         telemetry.addData("RobotVel y", vel.y);
-
 
                     } else rx = rightStick.x * boost;
 

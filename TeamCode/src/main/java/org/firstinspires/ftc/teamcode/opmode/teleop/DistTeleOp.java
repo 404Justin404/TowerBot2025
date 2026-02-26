@@ -5,20 +5,17 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.smartcluster.oracleftc.commands.CommandScheduler;
 import com.smartcluster.oracleftc.commands.InstantCommand;
-import com.smartcluster.oracleftc.commands.ParallelCommand;
 import com.smartcluster.oracleftc.commands.SequentialCommand;
 import com.smartcluster.oracleftc.fsm.FSM;
 import com.smartcluster.oracleftc.math.filters.MovingAverageFilter;
 import com.smartcluster.oracleftc.utils.Performance;
 import com.smartcluster.oracleftc.utils.ProcessedGamepad;
 
-import org.firstinspires.ftc.teamcode.calibration.ShooterCalibration;
 import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystem.Robot;
-import com.bylazar.telemetry.PanelsTelemetry;
+
 @Config
 //@TeleOp(group = "TeleOp")
 public class DistTeleOp extends LinearOpMode {
@@ -65,7 +62,6 @@ public class DistTeleOp extends LinearOpMode {
                                 robot.reset(),
                                 new InstantCommand(() ->{
                                     robot.turret.setTracking(robot.drive, cornerCoordinate);
-//                                    robot.turret.setTargetVelocity(1000);
                                     robot.turret.blockShooter();
                                 })
                         ))
@@ -74,25 +70,31 @@ public class DistTeleOp extends LinearOpMode {
                         robot.intake.intake())
 
                 .transition(TeleOpState.INTAKE, TeleOpState.IDLE, driverGamepad.left_bumper.up(),
-                        robot.intake.slowIntake())
+                        robot.intake.idleIntake())
 
                 .transition(TeleOpState.IDLE, TeleOpState.OUTTAKE, driverGamepad.circle.down(),
                         robot.intake.outake())
 
                 .transition(TeleOpState.OUTTAKE, TeleOpState.IDLE, driverGamepad.circle.up(),
-                        robot.intake.slowIntake())
+                        robot.intake.idleIntake())
 
-                .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, driverGamepad.dpad_down.pressed(),
+                .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, () -> driverGamepad.left_trigger.get() >= 0.5,
                         new SequentialCommand(
-                                robot.intake.intake(),
+                                robot.intake.slowIntake(),
                                 new InstantCommand(()->robot.turret.isAboutToShot.set(true))
+                        ))
+
+                .transition(TeleOpState.PRESHOOT, TeleOpState.IDLE, driverGamepad.circle.pressed(),
+                        new SequentialCommand(
+                                robot.intake.idleIntake(),
+                                new InstantCommand(()->robot.turret.isAboutToShot.set(false))
                         ))
 
                 .transition(TeleOpState.PRESHOOT, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() >= 0.5,
                         new SequentialCommand(
+                                robot.intake.intake(),
                                 robot.turret.WaitForRPM(2000),
-                                new InstantCommand(robot.turret::releaseShooter),
-                                robot.intake.intake()
+                                new InstantCommand(robot.turret::releaseShooter)
                         ))
 
                 .transition(TeleOpState.SHOOT, TeleOpState.IDLE, () -> driverGamepad.right_trigger.get() < 0.5,
@@ -100,10 +102,9 @@ public class DistTeleOp extends LinearOpMode {
                                 new InstantCommand(() ->
                                 {
                                     robot.turret.isAboutToShot.set(false);
-//                                    robot.turret.setTargetVelocity(1000);
                                     robot.turret.blockShooter();
                                 }),
-                                robot.intake.slowIntake()
+                                robot.intake.idleIntake()
                         ))
 
                 .build(scheduler);

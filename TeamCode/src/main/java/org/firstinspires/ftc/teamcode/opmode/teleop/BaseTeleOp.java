@@ -7,7 +7,6 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.smartcluster.oracleftc.commands.CommandScheduler;
 import com.smartcluster.oracleftc.commands.InstantCommand;
-import com.smartcluster.oracleftc.commands.ParallelCommand;
 import com.smartcluster.oracleftc.commands.SequentialCommand;
 import com.smartcluster.oracleftc.commands.WaitCommand;
 import com.smartcluster.oracleftc.fsm.FSM;
@@ -75,7 +74,7 @@ public class BaseTeleOp extends LinearOpMode {
                                     robot.turret.setTargetVelocity(1000);
                                     robot.turret.setHoodAngle(0.0);
                                     robot.turret.blockShooter();
-                                    robot.intake.slowIntake();
+                                    robot.intake.idleIntake();
                                 })
                         ))
 // IDLE -> INTAKE: Start intake when left bumper pressed
@@ -83,14 +82,14 @@ public class BaseTeleOp extends LinearOpMode {
                         robot.intake.intake())
 
                 .transition(TeleOpState.INTAKE, TeleOpState.IDLE, driverGamepad.left_bumper.up(),
-                        robot.intake.slowIntake())
+                        robot.intake.idleIntake())
 
 // IDLE -> OUTTAKE: Manual outtake with right bumper
                 .transition(TeleOpState.IDLE, TeleOpState.OUTTAKE, driverGamepad.circle.down(),
                         robot.intake.outake())
 
                 .transition(TeleOpState.OUTTAKE, TeleOpState.IDLE, driverGamepad.circle.up(),
-                        robot.intake.slowIntake())
+                        robot.intake.idleIntake())
 
 //                RIGHT BUMPER ESTE BOOST
 
@@ -143,7 +142,7 @@ public class BaseTeleOp extends LinearOpMode {
                                     robot.turret.setTargetVelocity(1000);
                                     robot.turret.setHoodAngle(0);
                                 }),
-                                robot.intake.slowIntake()
+                                robot.intake.idleIntake()
                         ))
 
                 // Emergency stop

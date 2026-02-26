@@ -54,7 +54,7 @@ public class Robot {
         return new SequentialCommand(
                 new ParallelCommand(
                         turret.reset(),
-                        intake.slowIntake()
+                        intake.idleIntake()
                 )
         );
     }
