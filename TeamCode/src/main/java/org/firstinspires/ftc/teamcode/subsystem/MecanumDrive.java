@@ -76,7 +76,7 @@ public class MecanumDrive  {
     public LynxVoltageSensor voltageSensor;
     public SmartLocalizer localizer;
 
-    public static double SOTM_INFLUENCE = 0.4;
+    public static double SOTM_INFLUENCE = 0.76, SOTM_OFFSETDISTANCE =0.1; // SOTM - SHOOTING ON THE MOVE
     public static boolean enableOrientation = false;
 
     public Command update()
@@ -171,7 +171,7 @@ public class MecanumDrive  {
                 .build();
     }
     public static PIDController rotationPID = new PIDController(2.2,0.00000, 0.27);
-    public static Pose2d resetPose = new Pose2d(50, 0, 0);
+    public static Pose2d resetPose = new Pose2d(0, 0, 0);
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
         return new Command.CommandBuilder()
@@ -251,32 +251,32 @@ public class MecanumDrive  {
     }
 
 // Actual do not.
-//    public com.acmerobotics.roadrunner.Pose2d getCornerOffsetVelocity(com.acmerobotics.roadrunner.Pose2d corner)
-//    {
-//        Vector2d vel = getPose().velocity().linearVel.value();
-//        vel = vel.div(SOTM_INFLUENCE);
-//
-//        return new com.acmerobotics.roadrunner.Pose2d (corner.position.x - vel.x, corner.position.y - vel.y, corner.heading.log());
-//    }
+    public com.acmerobotics.roadrunner.Pose2d getCornerOffsetVelocity(com.acmerobotics.roadrunner.Pose2d corner)
+    {
+        Vector2d vel = getPose().velocity().linearVel.value();
+        vel = vel.times(SOTM_INFLUENCE+SOTM_OFFSETDISTANCE);
+
+        return new com.acmerobotics.roadrunner.Pose2d (corner.position.x - vel.x, corner.position.y - vel.y, corner.heading.log());
+    }
 
     public static class Params {
         // IMU orientation
         // TODO: fill in these values based on
         //   see https://ftc-docs.firstinspires.org/en/latest/programming_resources/imu/imu.html?highlight=imu#physical-hub-mounting
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
                 RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
         // drive model parameters
-        public double inPerTick = 0.00199766938571666;
-        public double lateralInPerTick = 0.0012332743278375949;
-        public double trackWidthTicks = -4431.495452118704;
+        public double inPerTick =  0.001983361798248;
+        public double lateralInPerTick = 0.0013967756998488929;
+        public double trackWidthTicks = -4510.444195024201;
 
         // feedforward parameters (in tick units)
-        public double kS = 0.8681625269395895;
-        public double kV = 0.00011594525943;
-        public double kA = 0.000092;
+        public double kS = 0.6378135424418125;
+        public double kV = 0.0001309379662458358;
+        public double kA = 0.000115;
 
         // path profile parameters (in inches)
         public double maxWheelVel = 50;

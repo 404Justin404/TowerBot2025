@@ -15,7 +15,7 @@
             <ContinuousRotationServo name = "backRightLift" port="4" />
             <ContinuousRotationServo name = "frontRightLift" port="5" />
 
-            <OracleGoBildaPinpoint name="pinpoint" port="0"/>
+            <goBILDAPinpoint name="pinpoint" port="0"/>
             <AnalogInput name="canandgyro" port="0"/>
             <LynxEmbeddedIMU name="imu" port="0" bus="0" />
         </LynxModule>

@@ -146,10 +146,10 @@ public class Turret extends Subsystem {
     }
 
     public void setVelocityAndAngleByDist(Pose2d currPos, Pose2d corner){
-//        Pose2d offsetCorner = drive.getCornerOffsetVelocity(corner);
-//        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, offsetCorner) + VELOCITY_INTERCEPT;
+        Pose2d offsetCorner = drive.getCornerOffsetVelocity(corner);
+        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, offsetCorner) + VELOCITY_INTERCEPT;
 
-        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, corner) + VELOCITY_INTERCEPT;
+//        double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, corner) + VELOCITY_INTERCEPT;
         double angle = getCurrentVelocity() * HOOD_SLOPE + HOOD_INTERCEPT;
 
         // No longer in zone? You say so?! Stop wasting energy then!!! - R
@@ -164,10 +164,11 @@ public class Turret extends Subsystem {
     public Command VelocityUpdate() {
         return Command.builder()
                 .update(() -> {
+                    telemetry.addData("hood angle", servoHood.getPosition());
                     if (isAboutToShot.get()) setVelocityAndAngleByDist(drive.getPose().value(), goal);
                     else {
                         setTargetVelocity(1000);
-                        setHoodAngle((HOOD_MAX_POSITION+HOOD_MIN_POSITION)/3);
+                        setHoodAngle(HOOD_MIN_POSITION);
                     }
                 })
                 .requires(this)
@@ -192,7 +193,6 @@ public class Turret extends Subsystem {
     public Command update() {
             return Command.builder()
                     .update(() -> {
-                        telemetry.addData("ServoLever Pos", servoLever.getPosition());
                         if (enabledVel.get()) {
                             double currentVelocity = getCurrentVelocity(); //RPM
                             double power = flywheelPID.update(targetVelocity, currentVelocity) + flywheelFeedforward.update(targetVelocity, 0);

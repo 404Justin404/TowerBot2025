@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.roadrunner.oraclelocalizer;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
@@ -26,6 +28,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+import org.firstinspires.ftc.teamcode.roadrunner.Drawing;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -85,8 +88,8 @@ public class SmartLocalizer extends Localizer {
     }
 
     public static double mmPerTick=1/19.89436789;
-    public static double parallelOffset=1053.2964026273123*mmPerTick;
-    public static double perpendicularOffset=138.69126512996786*mmPerTick;
+    public static double parallelOffset= 1030.196859688547*mmPerTick;
+    public static double perpendicularOffset= 14.873204892234723*mmPerTick;
     public static long pinpointTimeDelta = 700;
     public static long pinpointRejectionThreshold = 5;
     private final AnalogInput canandgyro;
@@ -133,7 +136,7 @@ public class SmartLocalizer extends Localizer {
                         new DualNum<>(pinpoint.getPosX(DistanceUnit.MM), pinpoint.getVelX(DistanceUnit.MM)),
                         new DualNum<>(pinpoint.getPosY(DistanceUnit.MM), pinpoint.getVelY(DistanceUnit.MM))
                 ).div(25.4),
-                Rotation2dDual.exp(new DualNum<>(pinpoint.getHeading(AngleUnit.DEGREES), pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)))
+                Rotation2dDual.exp(new DualNum<>(pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS), pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)))
         );
 
     }
@@ -177,8 +180,6 @@ public class SmartLocalizer extends Localizer {
                 headingDelta.log()
         );
 
-
-
         if(pinpointTime.milliseconds()>pinpointTimeDelta)
         {
             pinpoint.update();
@@ -198,12 +199,14 @@ public class SmartLocalizer extends Localizer {
         pose = new Pose2dDual<>(pose.value().plus(updateTwist.value()), pose.value().plus(updateTwist.value()).times(updateTwist.velocity()));
 //        telemetry.addData("internalHeading", pose.heading.value().log());
 
-        // Pinpoint debug, comment when not needed
-        Pose2dDual<Time> pinPose = getPinpointPosition();
+        // Pinpoint debug
+//        com.smartcluster.oracleftc.math.Pose2d pinpointPose = getPinpointPosition().value();
+//
+//        telemetry.addData("Pinpoint X", pinpointPose.position.x);
+//        telemetry.addData("Pinpoint Y", pinpointPose.position.y);
+//        telemetry.addData("Pinpoint HEADING", Math.toDegrees(pinpointPose.heading.log()));
+        // --------------
 
-        telemetry.addData("Pinpoint X", pinPose.position.x.get(0));
-        telemetry.addData("Pinpoint Y", pinPose.position.y.get(0));
-        telemetry.addData("Pinpoint HEADING", Math.toDegrees(pinPose.heading.log().get(0)));
 
         lastHeading=Rotation2dDual.constant(heading,1);
         lastParallel=new DualNum<>(parallel.get(0));

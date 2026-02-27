@@ -1,9 +1,6 @@
-package org.firstinspires.ftc.teamcode.opmode.teleop;
+package org.firstinspires.ftc.teamcode.opmode.unusuedTeleop;
 
 import com.acmerobotics.roadrunner.Pose2d;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
-import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 
 //@TeleOp(group = "TeleOp")
 public class RedTeleOp extends BaseTeleOp {

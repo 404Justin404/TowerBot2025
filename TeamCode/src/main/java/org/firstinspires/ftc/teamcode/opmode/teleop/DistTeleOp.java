@@ -3,8 +3,10 @@ package org.firstinspires.ftc.teamcode.opmode.teleop;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.smartcluster.oracleftc.commands.CommandScheduler;
 import com.smartcluster.oracleftc.commands.InstantCommand;
 import com.smartcluster.oracleftc.commands.SequentialCommand;
@@ -13,6 +15,7 @@ import com.smartcluster.oracleftc.math.filters.MovingAverageFilter;
 import com.smartcluster.oracleftc.utils.Performance;
 import com.smartcluster.oracleftc.utils.ProcessedGamepad;
 
+import org.firstinspires.ftc.teamcode.roadrunner.Drawing;
 import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystem.Robot;
 
@@ -22,6 +25,8 @@ public class DistTeleOp extends LinearOpMode {
     protected Pose2d cornerCoordinate = new Pose2d(60,63, Math.toRadians(-45));
     protected Pose2d resetPose = new Pose2d(0, 0, 0);
     protected boolean isRed = true;
+
+    private final ElapsedTime preshoot_onhold = new ElapsedTime();
     private final CommandScheduler scheduler = new CommandScheduler();
 
     public enum TeleOpState {
@@ -86,7 +91,7 @@ public class DistTeleOp extends LinearOpMode {
                                 new InstantCommand(()->robot.turret.isAboutToShot.set(true))
                         ))
 
-                .transition(TeleOpState.PRESHOOT, TeleOpState.IDLE, driverGamepad.circle.pressed(),
+                .transition(TeleOpState.PRESHOOT, TeleOpState.IDLE, () -> (driverGamepad.circle.pressed().get() || preshoot_onhold.milliseconds() > 1500),
                         new SequentialCommand(
                                 robot.intake.idleIntake(),
                                 new InstantCommand(()->robot.turret.isAboutToShot.set(false))
@@ -119,6 +124,8 @@ public class DistTeleOp extends LinearOpMode {
             robot.read();
 
             CurrentState = fsm.getCurrentState();
+
+            if (driverGamepad.left_trigger.get() >= 0.5) preshoot_onhold.reset();
 
             // Telemetry
             telemetry.addData("Current State", CurrentState);
