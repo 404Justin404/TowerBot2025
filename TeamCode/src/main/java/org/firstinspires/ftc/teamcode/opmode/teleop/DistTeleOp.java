@@ -100,7 +100,7 @@ public class DistTeleOp extends LinearOpMode {
                 .transition(TeleOpState.PRESHOOT, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() >= 0.5,
                         new SequentialCommand(
                                 robot.intake.intake(),
-                                robot.turret.WaitForRPM(2000),
+                                robot.turret.WaitForRPM(1500),
                                 new InstantCommand(robot.turret::releaseShooter)
                         ))
 
@@ -130,7 +130,6 @@ public class DistTeleOp extends LinearOpMode {
             // Telemetry
             telemetry.addData("Current State", CurrentState);
             telemetry.addData("Turret Velocity", robot.turret.getCurrentVelocity());
-
 
             telemetry.addData("x", robot.drive.localizer.getPose().position.x.get(0));
             telemetry.addData("y", robot.drive.localizer.getPose().position.y.get(0));

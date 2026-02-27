@@ -67,7 +67,7 @@ public class Turret extends Subsystem {
     private boolean inZone;
 
     public static double HOOD_MIN_POSITION = 0.0;
-    public static double HOOD_MAX_POSITION = 0.45;
+    public static double HOOD_MAX_POSITION = 0.35;
     public static double LEVER_BLOCK_POSITION = 0.15;  // Position that blocks the flywheel
     public static double LEVER_RELEASE_POSITION = 0.0; // Position that allows shooting
 
@@ -216,7 +216,7 @@ public class Turret extends Subsystem {
     public Command reset() {
         return new SequentialCommand(
                 new InstantCommand(() -> {
-                    servoHood.setPosition(0);
+                    servoHood.setPosition(HOOD_MIN_POSITION);
                     blockShooter();
                     enabledVel.set(true);
                     isAboutToShot.set(false);
