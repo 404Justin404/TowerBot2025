@@ -170,7 +170,7 @@ public class MecanumDrive  {
                 })
                 .build();
     }
-    public static PIDController rotationPID = new PIDController(2.2,0.00000, 0.27);
+    public static PIDController rotationPID = new PIDController(2,0.00000, 0.23);
     public static Pose2d resetPose = new Pose2d(0, 0, 0);
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
@@ -178,14 +178,7 @@ public class MecanumDrive  {
                 .update(()->{
                     ProcessedGamepad.Joystick.JoystickData leftStick = gamepad.left_stick.get();
                     ProcessedGamepad.Joystick.JoystickData rightStick = gamepad.right_stick.get();
-                    if (gamepad.options.get()) {
-//                        currentPose = new com.acmerobotics.roadrunner.Pose2d(0, 0, Math.toRadians(90));
-                        localizer.setPose(resetPose);
-                        Pose2D translatedPose = new Pose2D(DistanceUnit.INCH, resetPose.position.x, resetPose.position.y, AngleUnit.RADIANS, resetPose.heading.log());
-                        localizer.pinpoint.setPosition(translatedPose);
-                        telemetry.addLine("LOCALIZER RESETED!");
-                    }
-
+                    if (gamepad.options.get()) localizer.setPose(resetPose);
 
                     double botHeading = localizer.getPose().heading.value().log();
                     double boost = (gamepad.right_bumper.get() ? 0.9 : 0.4);
@@ -250,7 +243,6 @@ public class MecanumDrive  {
                 .build();
     }
 
-// Actual do not.
     public com.acmerobotics.roadrunner.Pose2d getCornerOffsetVelocity(com.acmerobotics.roadrunner.Pose2d corner)
     {
         Vector2d vel = getPose().velocity().linearVel.value();

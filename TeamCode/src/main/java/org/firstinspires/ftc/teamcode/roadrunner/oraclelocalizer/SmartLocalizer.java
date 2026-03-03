@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.roadrunner.oraclelocalizer;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
@@ -15,7 +13,6 @@ import com.qualcomm.robotcore.util.RobotLog;
 import com.smartcluster.oracleftc.math.DualNum;
 import com.smartcluster.oracleftc.math.Pose2d;
 import com.smartcluster.oracleftc.math.Pose2dDual;
-import com.smartcluster.oracleftc.math.PoseVelocity2d;
 import com.smartcluster.oracleftc.math.Rotation2d;
 import com.smartcluster.oracleftc.math.Rotation2dDual;
 import com.smartcluster.oracleftc.math.Time;
@@ -28,7 +25,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
-import org.firstinspires.ftc.teamcode.roadrunner.Drawing;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -87,17 +83,31 @@ public class SmartLocalizer extends Localizer {
         }
     }
 
-    public static double mmPerTick=1/19.89436789;
-    public static double parallelOffset= 1030.196859688547*mmPerTick;
-    public static double perpendicularOffset= 14.873204892234723*mmPerTick;
-    public static long pinpointTimeDelta = 700;
-    public static long pinpointRejectionThreshold = 5;
+    public static double mmPerTick=1/19.85017497812804;
+    public static double parallelOffset = 1030.196859688547*mmPerTick;
+    public static double perpendicularOffset = 14.873204892234723*mmPerTick;
+    public static long pinpointTimeDelta = 1000;
+    public static long distanceRejectionThreshold = 4;
+    public static double velocityPositionRejectionThreshold = 1;
+    public static double velocityHeadingRejectionThreshold = 0.04;
+
+
+    private int validPosesCount = 0, invalidPosesCount = 0;
+
     private final AnalogInput canandgyro;
     private double gyroVoltageOffset;
     public final GoBildaPinpointDriver pinpoint;
     public final com.acmerobotics.roadrunner.ftc.Encoder parallelEncoder, perpendicularEncoder;
     private final LowPassFilter headingVelFilter= new LowPassFilter(0.35);
     private final Telemetry telemetry;
+
+    public enum TypeOfCheck
+    {
+        VELOCITY_BASED,
+        DISTANCE_BASED
+    };
+
+    public TypeOfCheck typeOfCheck = TypeOfCheck.DISTANCE_BASED;
 
 
 
@@ -116,7 +126,7 @@ public class SmartLocalizer extends Localizer {
         lastPerpendicular = new DualNum<>(perpendicularEncoder.getPositionAndVelocity().position);
         gyroVoltageOffset = canandgyro.getVoltage();
 
-        pinpoint.setEncoderResolution(19.89436789, DistanceUnit.MM);
+        pinpoint.setEncoderResolution(1/mmPerTick, DistanceUnit.MM);
         pinpoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
         pinpoint.setOffsets(-parallelOffset, perpendicularOffset, DistanceUnit.MM);
 
@@ -185,17 +195,16 @@ public class SmartLocalizer extends Localizer {
             pinpoint.update();
             Pose2dDual<Time> newPose = getPinpointPosition();
 
-            if(((Double.isNaN(newPose.heading.log().get(0)) ||
-                    Double.isNaN(newPose.position.x.get(0)) ||
-                    Double.isNaN(newPose.position.y.get(0)))) ||
-                    pose.position.minus(newPose.position).sqrNorm().get(0) > pinpointRejectionThreshold*pinpointRejectionThreshold)
+            if(isValidPose(newPose))
             {
-
-            }else {
                 pose=newPose;
+                validPosesCount++;
             }
+            else invalidPosesCount++; // Aw, robot too good.
+
             pinpointTime.reset();
         }
+
         pose = new Pose2dDual<>(pose.value().plus(updateTwist.value()), pose.value().plus(updateTwist.value()).times(updateTwist.velocity()));
 //        telemetry.addData("internalHeading", pose.heading.value().log());
 
@@ -207,6 +216,8 @@ public class SmartLocalizer extends Localizer {
 //        telemetry.addData("Pinpoint HEADING", Math.toDegrees(pinpointPose.heading.log()));
         // --------------
 
+        telemetry.addData("Good/Bad poses", validPosesCount + "/" + invalidPosesCount);
+//        telemetry.addData("Heading Velocity", pose.heading.velocity().get(0));
 
         lastHeading=Rotation2dDual.constant(heading,1);
         lastParallel=new DualNum<>(parallel.get(0));
@@ -215,11 +226,50 @@ public class SmartLocalizer extends Localizer {
         return updateTwist;
     }
 
+    boolean isValidPose(Pose2dDual<Time> newPose)
+    {
+        boolean isNull = Double.isNaN(newPose.heading.log().get(0)) ||
+                Double.isNaN(newPose.position.x.get(0)) ||
+                Double.isNaN(newPose.position.y.get(0));
+
+
+        boolean validSituation = false;
+
+        switch(typeOfCheck)
+        {
+            case DISTANCE_BASED:
+                validSituation = pose.position.minus(newPose.position).sqrNorm().get(0) <= distanceRejectionThreshold * distanceRejectionThreshold;
+                break;
+            case VELOCITY_BASED:
+                validSituation = pose.velocity().linearVel.sqrNorm().get(0) <= velocityPositionRejectionThreshold * velocityPositionRejectionThreshold;
+                validSituation &= Math.abs(pose.heading.velocity().get(0)) <= velocityHeadingRejectionThreshold;
+                break;
+        }
+        return !isNull && validSituation;
+    }
+
     @Override
     public void setPose(Pose2dDual<Time> pose) {
         super.setPose(pose);
         gyroVoltageOffset=canandgyro.getVoltage()-pose.heading.log().get(0) * 3.3/360;
-//        Pose2D translatedPose = new Pose2D(DistanceUnit.INCH, pose.position.x.get(0), pose.position.y.get(0), AngleUnit.RADIANS, pose.heading.log().get(0));
-//        pinpoint.setPosition(translatedPose);
+        Pose2D translatedPose = new Pose2D(DistanceUnit.INCH, pose.position.x.get(0), pose.position.y.get(0), AngleUnit.RADIANS, pose.heading.log().get(0));
+        pinpoint.setPosition(translatedPose);
+    }
+
+    @Override
+    public void setPose(Pose2d pose)
+    {
+        super.setPose(pose);
+        gyroVoltageOffset=canandgyro.getVoltage()-pose.heading.log() * 3.3/360;
+        Pose2D translatedPose = new Pose2D(DistanceUnit.INCH, pose.position.x, pose.position.y, AngleUnit.RADIANS, pose.heading.log());
+        pinpoint.setPosition(translatedPose);
+
+        telemetry.addLine("Localizer updated!");
+    }
+
+    public void setParams(TypeOfCheck type, long timeBetweenScans)
+    {
+        pinpointTimeDelta = timeBetweenScans;
+        typeOfCheck = type;
     }
 }

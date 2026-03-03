@@ -16,6 +16,7 @@ import com.smartcluster.oracleftc.utils.Performance;
 import com.smartcluster.oracleftc.utils.ProcessedGamepad;
 
 import org.firstinspires.ftc.teamcode.roadrunner.Drawing;
+import org.firstinspires.ftc.teamcode.roadrunner.oraclelocalizer.SmartLocalizer;
 import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystem.Robot;
 
@@ -88,19 +89,25 @@ public class DistTeleOp extends LinearOpMode {
                 .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, () -> driverGamepad.left_trigger.get() >= 0.5,
                         new SequentialCommand(
                                 robot.intake.slowIntake(),
-                                new InstantCommand(()->robot.turret.isAboutToShot.set(true))
+                                new InstantCommand(()-> {
+                                    robot.turret.isAboutToShot.set(true);
+//                                    robot.drive.localizer.setParams(SmartLocalizer.TypeOfCheck.VELOCITY_BASED, 100);
+                                })
                         ))
 
-                .transition(TeleOpState.PRESHOOT, TeleOpState.IDLE, () -> (driverGamepad.circle.pressed().get() || preshoot_onhold.milliseconds() > 1500),
+                .transition(TeleOpState.PRESHOOT, TeleOpState.IDLE, () -> (driverGamepad.circle.pressed().get() || preshoot_onhold.milliseconds() > 1800),
                         new SequentialCommand(
                                 robot.intake.idleIntake(),
-                                new InstantCommand(()->robot.turret.isAboutToShot.set(false))
+                                new InstantCommand(()->{
+                                    robot.turret.isAboutToShot.set(false);
+//                                    robot.drive.localizer.setParams(SmartLocalizer.TypeOfCheck.DISTANCE_BASED, 1000);
+                                })
                         ))
 
                 .transition(TeleOpState.PRESHOOT, TeleOpState.SHOOT, () -> driverGamepad.right_trigger.get() >= 0.5,
                         new SequentialCommand(
                                 robot.intake.intake(),
-                                robot.turret.WaitForRPM(1500),
+                                robot.turret.WaitForRPM(2000),
                                 new InstantCommand(robot.turret::releaseShooter)
                         ))
 
@@ -110,6 +117,7 @@ public class DistTeleOp extends LinearOpMode {
                                 {
                                     robot.turret.isAboutToShot.set(false);
                                     robot.turret.blockShooter();
+//                                    robot.drive.localizer.setParams(SmartLocalizer.TypeOfCheck.DISTANCE_BASED, 1000);
                                 }),
                                 robot.intake.idleIntake()
                         ))
