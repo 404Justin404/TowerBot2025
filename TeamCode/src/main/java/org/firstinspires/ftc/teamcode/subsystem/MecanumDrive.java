@@ -170,8 +170,8 @@ public class MecanumDrive  {
                 })
                 .build();
     }
-    public static PIDController rotationPID = new PIDController(2.2,0.00000, 0.27);
-    public static Pose2d resetPose = new Pose2d(0, 0, 0);
+    public static PIDController rotationPID = new PIDController(2,0.00000, 0.23);
+    public static Pose2d resetPose = new Pose2d(0, 0, Math.toRadians(180));
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
         return new Command.CommandBuilder()
@@ -188,7 +188,7 @@ public class MecanumDrive  {
 
 
                     double botHeading = localizer.getPose().heading.value().log();
-                    double boost = (gamepad.right_bumper.get() ? 0.9 : 0.4);
+                    double boost = (gamepad.right_bumper.get() ? 1 : 0.5);
 
                     double rx;
 
@@ -209,7 +209,7 @@ public class MecanumDrive  {
                         telemetry.addData("RobotVel x", vel.x);
                         telemetry.addData("RobotVel y", vel.y);
 
-                    } else rx = rightStick.x * boost;
+                    } else rx = rightStick.x * boost*0.9;
 
                     rx = -rx; // Thanks SmartLocalizer!!! I like it when you inverse my robot's rx!
 

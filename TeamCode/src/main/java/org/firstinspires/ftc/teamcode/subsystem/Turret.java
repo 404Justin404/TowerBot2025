@@ -47,9 +47,9 @@ public class Turret extends Subsystem {
 //    // Servo actuators
 //    public final ServoActuator hood, lever;
 
-    public static MotorFeedforward flywheelFeedforward = new MotorFeedforward(0.201502, 0.000154, 0);
-    public static PIDController flywheelPID = new PIDController(0.005, 0, 0.00035, 0.5);
-    public static LowPassFilter velocityFilter = new LowPassFilter(0.5);
+    public static MotorFeedforward flywheelFeedforward = new MotorFeedforward(0.201502, 0.00038, 0);
+    public static PIDController flywheelPID = new PIDController(0.0035, 0, 0.0001, 0.5);
+    public static LowPassFilter velocityFilter = new LowPassFilter(0.6);
     private double targetVelocity = 0; // RPM
     public static double RPM_TOLERANCE = 100;
 
@@ -100,7 +100,7 @@ public class Turret extends Subsystem {
      * Get current flywheel velocity in RPM
      */
     public double getCurrentVelocity() {
-        return velocityFilter.update((shooter2.getVelocity() / 28) * 60);
+        return velocityFilter.update((shooter2.getVelocity() / 28) * 60 * 2/3);
     }
 
     public void setTargetVelocity(double velocity) {

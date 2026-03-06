@@ -28,6 +28,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.SmartLocalizerConstants;
 import org.firstinspires.ftc.teamcode.roadrunner.Drawing;
 
 import java.util.LinkedList;
@@ -87,7 +88,7 @@ public class SmartLocalizer extends Localizer {
         }
     }
 
-    public static double mmPerTick=1/19.89436789;
+    public static double mmPerTick=1/19.850174978128038402595508899388;
     public static double parallelOffset= 1030.196859688547*mmPerTick;
     public static double perpendicularOffset= 14.873204892234723*mmPerTick;
     public static long pinpointTimeDelta = 700;
@@ -98,6 +99,7 @@ public class SmartLocalizer extends Localizer {
     public final com.acmerobotics.roadrunner.ftc.Encoder parallelEncoder, perpendicularEncoder;
     private final LowPassFilter headingVelFilter= new LowPassFilter(0.35);
     private final Telemetry telemetry;
+
 
 
 
