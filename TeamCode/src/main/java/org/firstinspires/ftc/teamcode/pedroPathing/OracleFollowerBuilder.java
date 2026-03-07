@@ -43,6 +43,11 @@ public class OracleFollowerBuilder {
         return this;
     }
 
+    // First do pedro tests with only Pinpoint and only THEN you can start implementing SmartLocalizer
+    public OracleFollowerBuilder pinpointLocalizer(PinpointConstants lConstants) {
+        return setLocalizer(new PinpointLocalizer(hardwareMap, lConstants));
+    }
+
     public OracleFollowerBuilder smartLocalizer(SmartLocalizerConstants lConstants) {
         return setLocalizer(new SmartLocalizerPedro(hardwareMap, lConstants));
     }

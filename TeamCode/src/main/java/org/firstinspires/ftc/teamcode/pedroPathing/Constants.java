@@ -4,7 +4,9 @@ import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.ftc.FollowerBuilder;
 import com.pedropathing.ftc.drivetrains.MecanumConstants;
+import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -63,36 +65,40 @@ public class Constants {
                     0.01
             ));
 
-public static MecanumConstants driveConstants = new MecanumConstants()
-        .maxPower(1)
-        .rightFrontMotorName("frontRight")
-        .rightRearMotorName("backRight")
-        .leftRearMotorName("backLeft")
-        .leftFrontMotorName("frontLeft")
-        .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-        .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-        .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-        .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-        .xVelocity(86.55613984836369)
-        .yVelocity(67.04370549720103)
-        .useVoltageCompensation(true);
+    public static MecanumConstants driveConstants = new MecanumConstants()
+            .maxPower(1)
+            .rightFrontMotorName("frontRight")
+            .rightRearMotorName("backRight")
+            .leftRearMotorName("backLeft")
+            .leftFrontMotorName("frontLeft")
+            .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .xVelocity(86.55613984836369)
+            .yVelocity(67.04370549720103)
+            .useVoltageCompensation(true);
+
+    public static PinpointConstants pinpointConstants = new PinpointConstants()
+            .forwardPodY(51.89862/25.4) //offset of the forward encoder from the center of the robot in inches
+            .strafePodX(0.74927323/25.4) //offset of the strafe encoder from the center of the robot in inches
+            .distanceUnit(DistanceUnit.MM)
+            .hardwareMapName("pinpoint")
+            .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
+            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
     public static SmartLocalizerConstants smartLocalizerConstants = new SmartLocalizerConstants()
             .perpendicularEncoder_HardwareMapName("frontRight")
             .parallelEncoder_HardwareMapName("frontLeft")
             .gyroName("canandgyro")
-            .forwardTicksToInches(0.001989436789)
-            .forwardPodY(51.89862/25.4)
-            .strafeTicksToInches(0.001989436789)
-            .strafePodX(0.74927323/25.4)
-            .distanceUnit(DistanceUnit.MM)
+            .pinpointConstants(pinpointConstants) // You have to do pinpoint first anyways, so why not reuse it? - R
 
-            .pinpoint_HardwareMapName("pinpoint")
+            .encoderResolution(1/19.85017497812804) // ((Also overrides Pinpoint's resolution)) - R
             .pinpointTimeDelta(1000)
             .pinpointRejectionThreshold(4)
-            .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            .forwardEncoderDirection(DcMotorSimple.Direction.REVERSE)
+            .strafeEncoderDirection(DcMotorSimple.Direction.REVERSE);
 
     public static PathConstraints pathConstraints = new PathConstraints(
             0.99,
@@ -103,7 +109,6 @@ public static MecanumConstants driveConstants = new MecanumConstants()
             1.24,
             10,
             1.1);
-
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new OracleFollowerBuilder(followerConstants, hardwareMap)
