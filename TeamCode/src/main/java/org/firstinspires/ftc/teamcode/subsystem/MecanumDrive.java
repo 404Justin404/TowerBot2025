@@ -19,6 +19,7 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.PoseVelocity2dDual;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.ProfileParams;
+import com.acmerobotics.roadrunner.Rotation2dDual;
 import com.acmerobotics.roadrunner.TimeTrajectory;
 import com.acmerobotics.roadrunner.TimeTurn;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
@@ -42,6 +43,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.smartcluster.oracleftc.commands.Command;
+import com.smartcluster.oracleftc.commands.InstantCommand;
 import com.smartcluster.oracleftc.hardware.subsystem.Subsystem;
 import com.smartcluster.oracleftc.math.Pose2d;
 import com.smartcluster.oracleftc.math.Pose2dDual;
@@ -101,13 +103,13 @@ public class MecanumDrive  {
 
 
         com.acmerobotics.roadrunner.Pose2d t = pose.value();
-        com.acmerobotics.roadrunner.Vector2d p = t.position;
+        Vector2d p = t.position;
         c.setStrokeWidth(1);
         c.strokeCircle(p.x, p.y, ROBOT_RADIUS);
 
-        com.acmerobotics.roadrunner.Vector2d halfv = t.heading.vec().times(0.5 * ROBOT_RADIUS);
-        com.acmerobotics.roadrunner.Vector2d p1 = p.plus(halfv);
-        com.acmerobotics.roadrunner.Vector2d p2 = p1.plus(halfv);
+        Vector2d halfv = t.heading.vec().times(0.5 * ROBOT_RADIUS);
+        Vector2d p1 = p.plus(halfv);
+        Vector2d p2 = p1.plus(halfv);
         c.strokeLine(p1.x, p1.y, p2.x, p2.y);
         c.setStroke("#0000FF");
         c.strokeLine(p.x, p.y, p.x+pose.velocity().value().linearVel.x, p.y);
@@ -134,7 +136,7 @@ public class MecanumDrive  {
                                 new double[] {localizerPose.position.y.get(0), localizerPose.position.y.get(1)}
                         )
                 ),
-                com.acmerobotics.roadrunner.Rotation2dDual.exp(new DualNum<>(
+                Rotation2dDual.exp(new DualNum<>(
                         new double[] {localizer.getPose().heading.value().log(), localizerPose.heading.velocity().get(0)}
                 ))
         );
@@ -240,6 +242,26 @@ public class MecanumDrive  {
                     frontLeftMotor.setPower(frontLeftPower);
                     backLeftMotor.setPower(backLeftPower);
                 })
+                .build();
+    }
+
+    public Command toCorner (com.acmerobotics.roadrunner.Pose2d curentPose, com.acmerobotics.roadrunner.Pose2d corner){
+        AtomicReference <Double> rx = new AtomicReference<Double>();
+        AtomicReference<Double> botHeading = new AtomicReference<Double>();
+        return Command.builder()
+                .init(() -> {
+                    rx.set(0.0);
+                    botHeading.set(curentPose.heading.toDouble());
+                })
+                .update(() -> {
+
+                    Vector2d dir = corner.position.minus(getPose().value().position);
+
+                    double angle = Math.atan2(dir.y, dir.x);
+
+                    rx.set(rotationPID.update(0, AngleUnit.normalizeRadians(angle-botHeading.get())));
+                })
+                .finished(() -> true)
                 .build();
     }
 
@@ -634,7 +656,7 @@ public class MecanumDrive  {
         localizer.update();
         Twist2dDual<Time> twist = lastTwist;
         PoseVelocity2d velocity = new PoseVelocity2d(
-                new com.acmerobotics.roadrunner.Vector2d(
+                new Vector2d(
                         twist.line.x.get(1),
                         twist.line.y.get(1)
                 ),

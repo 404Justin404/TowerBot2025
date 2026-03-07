@@ -114,12 +114,12 @@ public class Turret extends Subsystem {
         return () -> pose.position.y >= BigTriangle || pose.position.y <= TinyTriangle;
     }
 
-    public void blockShooter() {
-        servoLever.setPosition(LEVER_BLOCK_POSITION);
+    public Command blockShooter() {
+        return new InstantCommand(()->servoLever.setPosition(LEVER_BLOCK_POSITION));
     }
 
-    public void releaseShooter() {
-        servoLever.setPosition(LEVER_RELEASE_POSITION);
+    public Command releaseShooter() {
+       return new InstantCommand(()->servoLever.setPosition(LEVER_RELEASE_POSITION));
     }
 
     public void setLeverAngle(double angle){
@@ -145,7 +145,7 @@ public class Turret extends Subsystem {
         return Math.sqrt(dx * dx + dy * dy) * 2.54; // returns distance in cm
     }
 
-    public void setVelocityAndAngleByDist(Pose2d currPos, Pose2d corner){
+    public Command setVelocityAndAngleByDist(Pose2d currPos, Pose2d corner){
         Pose2d offsetCorner = drive.getCornerOffsetVelocity(corner);
         double velocity = VELOCITY_SLOPE * getDistanceToTarget(currPos, offsetCorner) + VELOCITY_INTERCEPT;
 
@@ -156,9 +156,11 @@ public class Turret extends Subsystem {
 //        enabledVel.set(isInsideTheZone(currPos).get());
         enabledVel.set(true);
 
+        return new InstantCommand(()->{
+            setTargetVelocity(velocity);
+            setHoodAngle(angle);
+        });
 
-        setTargetVelocity(velocity);
-        setHoodAngle(angle);
     }
 
     public Command VelocityUpdate() {
