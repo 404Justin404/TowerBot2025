@@ -8,7 +8,6 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -19,16 +18,13 @@ import com.smartcluster.oracleftc.math.Rotation2d;
 import com.smartcluster.oracleftc.math.Rotation2dDual;
 import com.smartcluster.oracleftc.math.Time;
 import com.smartcluster.oracleftc.math.Twist2dDual;
-import com.smartcluster.oracleftc.math.Vector2d;
 import com.smartcluster.oracleftc.math.Vector2dDual;
 import com.smartcluster.oracleftc.math.filters.LowPassFilter;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
-import org.firstinspires.ftc.teamcode.roadrunner.oraclelocalizer.SmartLocalizer;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -42,7 +38,13 @@ public class SmartLocalizerPedro implements Localizer {
     public final GoBildaPinpointDriver pinpoint;
 
     // --------------
-    private Pose2dDual<Time> pose; // This tuff, very tuff
+    private Pose2dDual<Time> pose = new Pose2dDual<Time>(
+            new Vector2dDual<Time>(
+                    new DualNum<>(0, 0),
+                    new DualNum<>(0, 0)
+            ).div(25.4),
+            Rotation2dDual.exp(new DualNum<>(0, 0))
+    );
     public SmartLocalizerConstants constants;
     private final LowPassFilter headingVelFilter= new LowPassFilter(0.35);
     public enum TypeOfCheck
@@ -68,7 +70,7 @@ public class SmartLocalizerPedro implements Localizer {
 
     public SmartLocalizerPedro(HardwareMap map, SmartLocalizerConstants constants, Pose startPose) {
         canandgyro = map.get(AnalogInput.class, constants.gyroName);
-        pinpoint = map.get(GoBildaPinpointDriver.class, constants.pinpointConstants.hardwareMapName);
+        pinpoint = map.get(GoBildaPinpointDriver.class, constants.pinpointHardwareMap);
         parallelEncoder = new OverflowEncoder(new RawEncoder(map.get(DcMotorEx.class, constants.parallelEncoder)));
         parallelEncoder.setDirection(constants.forwardEncoderDirection);
         lastParallel = new DualNum<>(parallelEncoder.getPositionAndVelocity().position);
@@ -78,11 +80,13 @@ public class SmartLocalizerPedro implements Localizer {
         lastPerpendicular = new DualNum<>(perpendicularEncoder.getPositionAndVelocity().position);
         gyroVoltageOffset = canandgyro.getVoltage();
 
-        pinpoint.setEncoderResolution(1 / constants.mmPerTick, DistanceUnit.MM);
-        pinpoint.setEncoderDirections(constants.pinpointConstants.forwardEncoderDirection, constants.pinpointConstants.strafeEncoderDirection);
-        pinpoint.setOffsets(-constants.pinpointConstants.forwardPodY, constants.pinpointConstants.strafePodX, constants.pinpointConstants.distanceUnit);
+        pinpoint.setOffsets(-constants.forwardPodY, constants.strafePodX, constants.distanceUnit);
+        pinpoint.setEncoderResolution(1 / constants.encoderResolution, DistanceUnit.MM);
+        pinpoint.setEncoderDirections(constants.pinpoint_forwardEncoderDirection, constants.pinpoint_strafeEncoderDirection);
 
         resetPinpoint();
+        setPose(startPose);
+        this.constants = constants;
     }
 
     @Override
@@ -138,8 +142,8 @@ public class SmartLocalizerPedro implements Localizer {
 
         Twist2dDual<Time> updateTwist = new Twist2dDual<>(
                 new Vector2dDual<>(
-                        parallelDelta.minus(headingDelta.log().times(constants.pinpointConstants.forwardPodY*(1/constants.mmPerTick))).times(constants.mmPerTick),
-                        perpendicularDelta.minus(headingDelta.log().times(constants.pinpointConstants.strafePodX*(1/constants.mmPerTick))).times(constants.mmPerTick)
+                        parallelDelta.minus(headingDelta.log().times(constants.forwardPodY*(1/constants.encoderResolution))).times(constants.encoderResolution),
+                        perpendicularDelta.minus(headingDelta.log().times(constants.strafePodX*(1/constants.encoderResolution))).times(constants.encoderResolution)
                 ).div(25.4),
                 headingDelta.log()
         );
@@ -235,6 +239,17 @@ public class SmartLocalizerPedro implements Localizer {
                         new DualNum<>(pinpoint.getPosY(DistanceUnit.MM), pinpoint.getVelY(DistanceUnit.MM))
                 ).div(25.4),
                 Rotation2dDual.exp(new DualNum<>(pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS), pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)))
+        );
+    }
+
+    public Pose2dDual<Time> resetStartPose()
+    {
+        return new Pose2dDual<Time>(
+                new Vector2dDual<Time>(
+                        new DualNum<>(0, 0),
+                        new DualNum<>(0, 0)
+                ).div(25.4),
+                Rotation2dDual.exp(new DualNum<>(0, 0))
         );
     }
 

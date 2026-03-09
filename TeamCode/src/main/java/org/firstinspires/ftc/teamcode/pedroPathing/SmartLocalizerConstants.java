@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 import android.annotation.TargetApi;
 import android.os.Build;
 
-import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -17,35 +16,31 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @TargetApi(Build.VERSION_CODES.N)
 public class SmartLocalizerConstants {
-    /** The name of the Left Encoder in the hardware map (name of the motor port it is plugged into)
-     * Default Value: "leftFront" */
+
+    public double forwardPodY = 1;
+    public double strafePodX = -2.5;
+
+    public DistanceUnit distanceUnit = DistanceUnit.INCH;
+    public String pinpointHardwareMap = "pinpoint";
+
+    public GoBildaPinpointDriver.EncoderDirection pinpoint_forwardEncoderDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
+    public GoBildaPinpointDriver.EncoderDirection pinpoint_strafeEncoderDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+
     public String perpendicularEncoder = "frontLeft";
 
-    /** The name of the Right Encoder in the hardware map (name of the motor port it is plugged into)
-     * Default Value: "rightRear" */
     public String parallelEncoder = "frontRight";
 
-    public double mmPerTick = 1/19.85017497812804;
+    public double encoderResolution = 1/19.85017497812804;
 
-    /** The name of the Gyro in the hardware map(name of the analog port it is plugged into)
-     * Default Value: "canandgyro" */
     public String gyroName = "canandgyro";
 
-
-    /** The Pinpoint Refresh time / Frequency
-     * Default Value: 1000*/
     public double pinpointTimeDelta = 1000;
 
-    /** The Pinpoint Rejection Threshold
-     * Default Value: 4*/
     public double pinpointRejectionThreshold = 4;
 
     public DcMotorSimple.Direction forwardEncoderDirection = DcMotorSimple.Direction.REVERSE;
 
-    public  DcMotorSimple.Direction strafeEncoderDirection = DcMotorSimple.Direction.REVERSE;
-
-    public PinpointConstants pinpointConstants = new PinpointConstants();
-
+    public DcMotorSimple.Direction strafeEncoderDirection = DcMotorSimple.Direction.REVERSE;
     /**
      * This creates a new SmartLocalizerConstants with default values.
      */
@@ -83,32 +78,63 @@ public class SmartLocalizerConstants {
         return this;
     }
 
+    public SmartLocalizerConstants pinpointHardwareMap(String pinpoint)
+    {
+        this.pinpointHardwareMap = pinpoint;
+        return this;
+    }
+
+    public SmartLocalizerConstants forwardPodY(double forwardPodY) {
+        this.forwardPodY = forwardPodY;
+        return this;
+    }
+
+    public SmartLocalizerConstants strafePodX(double strafePodX) {
+        this.strafePodX = strafePodX;
+        return this;
+    }
+
+    public SmartLocalizerConstants distanceUnit(DistanceUnit distanceUnit) {
+        this.distanceUnit = distanceUnit;
+        return this;
+    }
+
     public SmartLocalizerConstants gyroName(String gyroName) {
         this.gyroName = gyroName;
         return this;
     }
 
-    public SmartLocalizerConstants pinpointConstants(PinpointConstants pinpointConstants)
+    public SmartLocalizerConstants encoderResolution(double encoderResolution)
     {
-        this.pinpointConstants = pinpointConstants;
+        this.encoderResolution = encoderResolution;
         return this;
     }
 
-    public SmartLocalizerConstants encoderResolution(double encoderResolution)
+    public SmartLocalizerConstants pinpoint_forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection pinpoint_forwardEncoderDirection)
     {
-        this.mmPerTick = encoderResolution;
+        this.pinpoint_forwardEncoderDirection = pinpoint_forwardEncoderDirection;
+        return this;
+    }
+
+    public SmartLocalizerConstants pinpoint_strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection pinpoint_strafeEncoderDirection)
+    {
+        this.pinpoint_strafeEncoderDirection = pinpoint_strafeEncoderDirection;
         return this;
     }
 
     public void defaults() {
         perpendicularEncoder = "leftFront";
         parallelEncoder = "rightRear";
-        mmPerTick = 1/19.85017497812804;
+        encoderResolution = 1/19.85017497812804;
         forwardEncoderDirection = DcMotorSimple.Direction.REVERSE;
         strafeEncoderDirection = DcMotorSimple.Direction.REVERSE;
+        forwardPodY = 51.89862/25.4;
+        strafePodX = 0.74927323/25.4;
+        distanceUnit = DistanceUnit.MM;
+        pinpoint_forwardEncoderDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
+        pinpoint_strafeEncoderDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+        pinpointHardwareMap = "pinpoint";
         gyroName = "canandgyro";
-
-        pinpointConstants = new PinpointConstants();
         pinpointTimeDelta = 1000;
         pinpointRejectionThreshold = 4;
     }

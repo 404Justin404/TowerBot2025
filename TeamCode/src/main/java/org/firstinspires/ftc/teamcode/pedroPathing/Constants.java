@@ -79,24 +79,31 @@ public class Constants {
             .yVelocity(67.04370549720103)
             .useVoltageCompensation(true);
 
-    public static PinpointConstants pinpointConstants = new PinpointConstants()
-            .forwardPodY(51.89862/25.4) //offset of the forward encoder from the center of the robot in inches
-            .strafePodX(0.74927323/25.4) //offset of the strafe encoder from the center of the robot in inches
-            .distanceUnit(DistanceUnit.MM)
-            .hardwareMapName("pinpoint")
-            .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
+//    public static PinpointConstants pinpointConstants = new PinpointConstants()
+//            .forwardPodY(51.89862/25.4) //offset of the forward encoder from the center of the robot in inches
+//            .strafePodX(0.74927323/25.4) //offset of the strafe encoder from the center of the robot in inches
+//            .distanceUnit(DistanceUnit.MM)
+//            .hardwareMapName("pinpoint")
+//            .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
+//            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
+//            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
     public static SmartLocalizerConstants smartLocalizerConstants = new SmartLocalizerConstants()
             .perpendicularEncoder_HardwareMapName("frontRight")
             .parallelEncoder_HardwareMapName("frontLeft")
             .gyroName("canandgyro")
-            .pinpointConstants(pinpointConstants) // You have to do pinpoint first anyways, so why not reuse it? - R
+
+            .forwardPodY(51.89862/25.4) //offset of the forward encoder from the center of the robot in inches
+            .strafePodX(0.74927323/25.4) //offset of the strafe encoder from the center of the robot in inches
+            .distanceUnit(DistanceUnit.MM)
+            .pinpointHardwareMap("pinpoint")
+
+            .pinpoint_forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
+            .pinpoint_strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
 
             .encoderResolution(1/19.85017497812804) // ((Also overrides Pinpoint's resolution)) - R
             .pinpointTimeDelta(1000)
-            .pinpointRejectionThreshold(4)
+            .pinpointRejectionThreshold(3)
             .forwardEncoderDirection(DcMotorSimple.Direction.REVERSE)
             .strafeEncoderDirection(DcMotorSimple.Direction.REVERSE);
 
