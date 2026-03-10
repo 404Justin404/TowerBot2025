@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.calibration;
+package org.firstinspires.ftc.teamcode.util.calibration;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -17,7 +17,7 @@ import java.util.List;
 @TeleOp(group = "Calibration")
 public class FlywheelCalibration extends LinearOpMode {
 
-    private static final CommandScheduler scheduler = new CommandScheduler();
+    private final CommandScheduler scheduler = new CommandScheduler();
     public static double targetVelocity=0;
 
 

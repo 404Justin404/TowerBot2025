@@ -59,6 +59,13 @@ public class Robot {
         );
     }
 
+    public Command Update(){
+    {
+        return new ParallelCommand(
+
+                turret.update()
+        );
+    }}
     public Command update()
     {
         return new ParallelCommand(

@@ -171,7 +171,7 @@ public class MecanumDrive  {
                 .build();
     }
     public static PIDController rotationPID = new PIDController(2,0.00000, 0.23);
-    public static Pose2d resetPose = new Pose2d(0, 0, Math.toRadians(180));
+    public static Pose2d resetPose = new Pose2d(0, 0, Math.toRadians(0));
     public Command driveFieldCentric(ProcessedGamepad gamepad, boolean flipRed, com.acmerobotics.roadrunner.Pose2d corner)
     {
         return new Command.CommandBuilder()

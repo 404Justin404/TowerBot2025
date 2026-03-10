@@ -91,7 +91,7 @@ public class DistTeleOp extends LinearOpMode {
                                 new InstantCommand(()->robot.turret.isAboutToShot.set(true))
                         ))
 
-                .transition(TeleOpState.PRESHOOT, TeleOpState.IDLE, () -> (driverGamepad.circle.pressed().get() || preshoot_onhold.milliseconds() > 1500),
+                .transition(TeleOpState.PRESHOOT, TeleOpState.IDLE, () -> (driverGamepad.circle.pressed().get() || preshoot_onhold.milliseconds() > 2500),
                         new SequentialCommand(
                                 robot.intake.idleIntake(),
                                 new InstantCommand(()->robot.turret.isAboutToShot.set(false))

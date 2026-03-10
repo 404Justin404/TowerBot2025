@@ -35,6 +35,8 @@ dependencies {
     compileOnly 'org.firstinspires.ftc:Hardware:11.1.0'
     compileOnly 'org.firstinspires.ftc:FtcCommon:11.1.0'
     compileOnly 'org.firstinspires.ftc:RobotServer:11.1.0'
+    compileOnly 'com.pedropathing:ftc:2.0.6'
+    compileOnly 'com.pedropathing:telemetry:1.0.0'
     api 'gov.nist.math:jama:1.0.3'
 
 

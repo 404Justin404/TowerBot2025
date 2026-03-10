@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.calibration;
+package org.firstinspires.ftc.teamcode.util.calibration;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;

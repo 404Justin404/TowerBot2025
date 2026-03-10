@@ -79,19 +79,16 @@ public static MecanumConstants driveConstants = new MecanumConstants()
         .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
         .xVelocity(86.55613984836369)
         .yVelocity(67.04370549720103)
-        .useVoltageCompensation(true)
-
-        ;
+        .useVoltageCompensation(true);
 
 public static PinpointConstants pinpointConstants = new PinpointConstants()
-        .forwardPodY(51.89862/25.4)//offset of the forward encoder from the center of the robot in inches
-        .strafePodX(0.74927323/25.4)//offset of the strafe encoder from the center of the robot in inches
+        .forwardPodY(51.89862)//offset of the forward encoder from the center of the robot in inches
+        .strafePodX(0.74927323)//offset of the strafe encoder from the center of the robot in inches
         .distanceUnit(DistanceUnit.MM)
         .hardwareMapName("pinpoint")
         .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
         .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-        .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
-        ;
+        .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
     public static PathConstraints pathConstraints = new PathConstraints(
             0.99,
