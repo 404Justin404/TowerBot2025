@@ -224,6 +224,12 @@ public class Turret extends Subsystem {
                 })
         );
     }
+    public void enable(){
+        enabledVel.set(true);
+    }
+    public void disable(){
+        enabledVel.set(false);
+    }
 
 //    @Override
 //    public SubsystemFlavor flavor() {

@@ -19,22 +19,23 @@ public class Constants {
 
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(11.5)
-            .forwardZeroPowerAcceleration(-30.76761359961186)
-            .lateralZeroPowerAcceleration(-59.17310439403229)
+            .forwardZeroPowerAcceleration(-22.54897814291522)
+            .lateralZeroPowerAcceleration(-61.636961122823166)
+
             .useSecondaryTranslationalPIDF(true)
             .useSecondaryHeadingPIDF(true)
             .useSecondaryDrivePIDF(true)
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(
                     0.025,
                     0,
-                    0.00001,
+                    0.00005,
                     0.6,
                     0.01
             ))
             .translationalPIDFCoefficients(new PIDFCoefficients(
-                    0.09,
+                    0.1,
                     0,
-                    0.02,
+                    0.025,
                     0.015
             ))
             .headingPIDFCoefficients(new PIDFCoefficients(
@@ -45,22 +46,24 @@ public class Constants {
             ))
 
             //secondary PID Controllers, for finer control of the robot
+
             .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(
-                    0.02,
+                    0.06,
                     0,
-                    0.000005,
+                    0.0001,
                     0.6,
-                    0.01
+                    0.03
+
             ))
 
             .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(
-                    0.2,
+                    0.065,
                     0,
                     0.01,
                     0
             ))
             .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(
-                    3,
+                    2.5,
                     0,
                     0.08,
                     0.01
@@ -77,9 +80,8 @@ public static MecanumConstants driveConstants = new MecanumConstants()
         .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
         .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
         .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-        .xVelocity(86.55613984836369)
-        .yVelocity(67.04370549720103)
-        .useVoltageCompensation(true);
+        .xVelocity(81.96620478592521)
+        .yVelocity(61.04370549720103);
 
 public static PinpointConstants pinpointConstants = new PinpointConstants()
         .forwardPodY(51.89862)//offset of the forward encoder from the center of the robot in inches

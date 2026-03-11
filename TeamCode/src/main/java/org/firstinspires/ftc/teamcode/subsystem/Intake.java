@@ -9,6 +9,9 @@ import com.smartcluster.oracleftc.commands.InstantCommand;
 import com.smartcluster.oracleftc.hardware.OracleLynxVoltageSensor;
 import com.smartcluster.oracleftc.hardware.subsystem.Subsystem;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
+
 public class Intake extends Subsystem {
 
     private final DcMotorImplEx intakeMotor;
@@ -44,8 +47,14 @@ public class Intake extends Subsystem {
         return new InstantCommand(() -> intakeMotor.setPower(0));
     }
 
-//    @Override
-//    public SubsystemFlavor flavor() {
-//        return SubsystemFlavor.ExpansionHubOnly;
-//    }
+    public double getCurrentAmps() {
+        return intakeMotor.getCurrent(CurrentUnit.AMPS) * Robot.nominalVoltage / voltageSensor.getVoltage();
+    }
+    public void BallNumber(double currentAmps) {
+        if(currentAmps>=6)telemetry.addLine("Intake has 3 balls");
+        else if(currentAmps>=4)telemetry.addLine("Intake has 2 balls");
+        else if(currentAmps>1.7)telemetry.addLine("Intake has 1 ball");
+        else telemetry.addLine("Intake has no balls");
+    }
 }
+

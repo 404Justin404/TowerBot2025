@@ -128,9 +128,12 @@ public class DistTeleOp extends LinearOpMode {
             if (driverGamepad.left_trigger.get() >= 0.5) preshoot_onhold.reset();
 
             // Telemetry
+//            telemetry.addData("Intake voltage",robot.intake.getCurrentAmps());
+//            robot.intake.BallNumber(robot.intake.getCurrentAmps());
             telemetry.addData("Current State", CurrentState);
             telemetry.addData("Turret Velocity", robot.turret.getCurrentVelocity());
-
+            telemetry.addData("Intake voltage",robot.intake.getCurrentAmps());
+            robot.intake.BallNumber(robot.intake.getCurrentAmps());
             telemetry.addData("x", robot.drive.localizer.getPose().position.x.get(0));
             telemetry.addData("y", robot.drive.localizer.getPose().position.y.get(0));
             telemetry.addData("heading (deg)", Math.toDegrees(robot.drive.localizer.getPose().heading.log().get(0)));
