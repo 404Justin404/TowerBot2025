@@ -1,5 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystem;
-//revizuire dupa completion
+
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -12,7 +12,7 @@ import java.util.List;
 
 @Config
 public class Robot {
-    public static double nominalVoltage=10.0;
+    public static double nominalVoltage = 10.0;
     private final OpMode opMode;
     private final boolean color;
     public final Turret flywheel;
@@ -20,20 +20,22 @@ public class Robot {
     public final Intake intake;
     public final Turret turret;
     public final Lift lift;
+    public final LimelightBallDetector limelight;
 
     List<LynxModule> lynxModules;
 
-    public Robot(OpMode mode,boolean color)
-    {
+    public Robot(OpMode mode, boolean color) {
         this.opMode = mode;
         OracleLynxVoltageSensor voltageSensor = mode.hardwareMap.getAll(OracleLynxVoltageSensor.class).iterator().next();
         voltageSensor.setPolicy(OracleLynxVoltageSensor.OracleLynxVoltageSensorPolicy.CACHED);
         voltageSensor.setVoltageCacheFreshness(50);
-        this.flywheel=new Turret(mode);
+
+        this.flywheel = new Turret(mode);
         this.intake = new Intake(mode);
         this.drive = new MecanumDrive(mode.hardwareMap, opMode.telemetry);
         this.turret = new Turret(mode);
-        this.lift=new Lift(mode);
+        this.lift = new Lift(mode);
+        this.limelight = new LimelightBallDetector(mode.hardwareMap);
         this.color = color;
 
         lynxModules = opMode.hardwareMap.getAll(LynxModule.class);
@@ -41,16 +43,14 @@ public class Robot {
             lynxModule.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
     }
 
-    public void read()
-    {
+    public void read() {
         for (LynxModule lynxModule : lynxModules) {
             lynxModule.clearBulkCache();
             lynxModule.getBulkData();
         }
     }
 
-    public Command reset()
-    {
+    public Command reset() {
         return new SequentialCommand(
                 new ParallelCommand(
                         turret.reset(),
@@ -59,18 +59,21 @@ public class Robot {
         );
     }
 
-    public Command Update(){
-    {
+    public Command Update() {
         return new ParallelCommand(
-
                 turret.update()
         );
-    }}
-    public Command update()
-    {
+    }
+
+    public Command update() {
         return new ParallelCommand(
                 drive.update(),
                 turret.update()
         );
+    }
+
+
+    public void shutdown() {
+        limelight.stop();
     }
 }

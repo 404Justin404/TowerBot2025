@@ -25,8 +25,8 @@ public class Lift extends Subsystem {
         frontRightLift = hardwareMap.get(CRServo.class, "frontRightLift");
 
 
-        backRightLift.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeftLift.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightLift.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeftLift.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void setPower(double power) {
