@@ -193,7 +193,7 @@ public class LimelightBallDetector {
                 .addPath(new BezierLine(current, targetPose))
                 .setLinearHeadingInterpolation(headingRad, lateralAngle)
                 .build();
-
+        follower.setMaxPower(1);
         follower.followPath(path, false);
     }
 
