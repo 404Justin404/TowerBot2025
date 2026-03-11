@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
+import com.pedropathing.ftc.PoseConverter;
+import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.math.Vector;
@@ -41,11 +43,12 @@ public class SmartLocalizerPedro implements Localizer {
     // --------------
     private Pose2dDual<Time> pose = new Pose2dDual<Time>(
             new Vector2dDual<Time>(
-                    new DualNum<>(0, 0),
-                    new DualNum<>(0, 0)
+                    new DualNum<>(0),
+                    new DualNum<>(0)
             ),
-            Rotation2dDual.exp(new DualNum<>(0, 0))
+            Rotation2dDual.exp(new DualNum<>(0))
     );
+
     public SmartLocalizerConstants constants;
     private final LowPassFilter headingVelFilter= new LowPassFilter(0.35);
     public enum TypeOfCheck
@@ -93,17 +96,17 @@ public class SmartLocalizerPedro implements Localizer {
 
     @Override
     public Pose getPose() {
-        return new Pose(pose.position.x.get(0), pose.position.y.get(0), pose.heading.log().get(0));
+        return new Pose(pose.position.value().x, pose.position.value().y, pose.heading.value().log());
     }
 
     @Override
     public Pose getVelocity() {
-        return new Pose(pose.velocity().linearVel.x.get(0), pose.velocity().linearVel.y.get(0), pose.velocity().angVel.get(0));
+        return new Pose(pose.velocity().value().linearVel.x, pose.velocity().value().linearVel.y, pose.velocity().value().angVel);
     }
 
     @Override
     public Vector getVelocityVector() {
-        return new Vector(pose.velocity().linearVel.x.get(0), pose.velocity().linearVel.y.get(0));
+        return new Vector(pose.velocity().value().linearVel.x, pose.velocity().value().linearVel.y);
     }
 
     @Override
@@ -122,10 +125,10 @@ public class SmartLocalizerPedro implements Localizer {
         gyroVoltageOffset=canandgyro.getVoltage()-newPose.heading.log() * 3.3/360;
         pose = new Pose2dDual<Time>(
                 new Vector2dDual<Time>(
-                        new DualNum<>(newPose.position.x, 0),
-                        new DualNum<>(newPose.position.y, 0)
+                        new DualNum<>(newPose.position.x),
+                        new DualNum<>(newPose.position.y)
                 ),
-                Rotation2dDual.exp(new DualNum<>(newPose.heading.log(), 0)));
+                Rotation2dDual.exp(new DualNum<>(newPose.heading.log())));
 
         Pose2D translatedPose = new Pose2D(DistanceUnit.INCH, newPose.position.x, newPose.position.y, AngleUnit.RADIANS, newPose.heading.log());
         pinpoint.setPosition(translatedPose);
@@ -176,8 +179,8 @@ public class SmartLocalizerPedro implements Localizer {
 
     public void getTelemetry(Telemetry telemetry)
     {
-        telemetry.addData("rawGyroAngle", AngleUnit.normalizeDegrees((-canandgyro.getVoltage()) * 360.0 / 3.3));
-        telemetry.addData("offsetGyroAngle", AngleUnit.normalizeDegrees((canandgyro.getVoltage()-gyroVoltageOffset) * 360.0 / 3.3));
+//        telemetry.addData("rawGyroAngle", AngleUnit.normalizeDegrees((-canandgyro.getVoltage()) * 360.0 / 3.3));
+//        telemetry.addData("offsetGyroAngle", AngleUnit.normalizeDegrees((canandgyro.getVoltage()-gyroVoltageOffset) * 360.0 / 3.3));
 //        telemetry.addData("pinpointFrequency", pinpoint.getFrequency());
 //
 //        telemetry.addData("parallelEncoder", parallelEncoder.getPositionAndVelocity().position);
@@ -185,16 +188,16 @@ public class SmartLocalizerPedro implements Localizer {
 //        telemetry.addData("internalHeading", pose.heading.value().log());
 
 
-        telemetry.addData("X", pose.position.x.get(0));
-        telemetry.addData("Y", pose.position.y.get(0));
-        telemetry.addData("HEADING", Math.toDegrees(pose.heading.log().get(0)));
+        telemetry.addData("x", pose.position.value().x);
+        telemetry.addData("y", pose.position.value().y);
+        telemetry.addData("heading", Math.toDegrees(pose.heading.value().log()));
 
 //         Pinpoint debug
-        com.smartcluster.oracleftc.math.Pose2d pinpointPose = getPinpointPosition().value();
-
-        telemetry.addData("Pinpoint X", pinpointPose.position.x);
-        telemetry.addData("Pinpoint Y", pinpointPose.position.y);
-        telemetry.addData("Pinpoint HEADING", Math.toDegrees(pinpointPose.heading.log()));
+//        com.smartcluster.oracleftc.math.Pose2d pinpointPose = getPinpointPosition().value();
+//
+//        telemetry.addData("Pinpoint X", pinpointPose.position.x);
+//        telemetry.addData("Pinpoint Y", pinpointPose.position.y);
+//        telemetry.addData("Pinpoint HEADING", Math.toDegrees(pinpointPose.heading.log()));
 //         --------------
     }
 
@@ -271,17 +274,6 @@ public class SmartLocalizerPedro implements Localizer {
                 Rotation2dDual.exp(new DualNum<>(pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS), pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)))
         );
     }
-
-//    public Pose2dDual<Time> resetStartPose()
-//    {
-//        return new Pose2dDual<Time>(
-//                new Vector2dDual<Time>(
-//                        new DualNum<>(0, 0),
-//                        new DualNum<>(0, 0)
-//                ).div(25.4),
-//                Rotation2dDual.exp(new DualNum<>(0, 0))
-//        );
-//    }
 
     boolean isValidPose(Pose2dDual<Time> newPose)
     {

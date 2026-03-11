@@ -7,6 +7,8 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -27,10 +29,12 @@ public class PedroLocalizationTest extends LinearOpMode {
     public void runOpMode()
     {
         follower = Constants.createFollower(this.hardwareMap);
+        TelemetryManager panels;
+        panels = PanelsTelemetry.INSTANCE.getTelemetry();
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         SmartLocalizerPedro localizer = (SmartLocalizerPedro) follower.getPoseTracker().getLocalizer();
 
-        follower.setStartingPose(new Pose(72,72, 0));
+        follower.setStartingPose(new Pose(72,72, Math.toRadians(180)));
         follower.startTeleopDrive();
         follower.update();
         waitForStart();
@@ -48,7 +52,6 @@ public class PedroLocalizationTest extends LinearOpMode {
 
             follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
             follower.update();
-
             localizer.getTelemetry(telemetry);
             telemetry.update();
         }
