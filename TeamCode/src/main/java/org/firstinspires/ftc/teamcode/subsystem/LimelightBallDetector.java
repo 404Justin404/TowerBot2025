@@ -145,7 +145,7 @@ public class LimelightBallDetector {
 
     public Command DriveToClosestBall(Follower follower, LimelightBallDetector detector, org.firstinspires.ftc.robotcore.external.Telemetry telemetry) {
         final ElapsedTime timer = new ElapsedTime();
-        final double interval = 500;
+        final double interval = 200;
 
         return Command.builder()
                 .init(() -> {
@@ -182,7 +182,7 @@ public class LimelightBallDetector {
         Pose current = follower.getPose();
         double headingRad = current.getHeading();
         double distanceInches = ball.estimatedDistance;
-        double lateralAngle = headingRad + Math.toRadians(ball.tx);
+        double lateralAngle = headingRad + Math.toRadians(-ball.tx);
 
         double targetX = current.getX() + distanceInches * Math.cos(lateralAngle);
         double targetY = current.getY() + distanceInches * Math.sin(lateralAngle);
@@ -193,7 +193,7 @@ public class LimelightBallDetector {
                 .addPath(new BezierLine(current, targetPose))
                 .setLinearHeadingInterpolation(headingRad, lateralAngle)
                 .build();
-        follower.setMaxPower(1);
+        follower.setMaxPower(0.8);
         follower.followPath(path, false);
     }
 
