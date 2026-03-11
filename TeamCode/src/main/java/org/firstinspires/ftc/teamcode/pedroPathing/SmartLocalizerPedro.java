@@ -21,6 +21,7 @@ import com.smartcluster.oracleftc.math.Twist2dDual;
 import com.smartcluster.oracleftc.math.Vector2dDual;
 import com.smartcluster.oracleftc.math.filters.LowPassFilter;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
@@ -42,7 +43,7 @@ public class SmartLocalizerPedro implements Localizer {
             new Vector2dDual<Time>(
                     new DualNum<>(0, 0),
                     new DualNum<>(0, 0)
-            ).div(25.4),
+            ),
             Rotation2dDual.exp(new DualNum<>(0, 0))
     );
     public SmartLocalizerConstants constants;
@@ -54,7 +55,7 @@ public class SmartLocalizerPedro implements Localizer {
     };
     public TypeOfCheck typeOfCheck = TypeOfCheck.DISTANCE_BASED;
 
-    // Variables to read before sleeping
+    // Variables to read before sleeping at 1 AM
     private double gyroVoltageOffset;
     private DualNum<Time> lastParallel, lastPerpendicular;
     private Rotation2dDual<Time> lastHeading = Rotation2dDual.constant(Rotation2d.exp(0),1);
@@ -70,7 +71,8 @@ public class SmartLocalizerPedro implements Localizer {
 
     public SmartLocalizerPedro(HardwareMap map, SmartLocalizerConstants constants, Pose startPose) {
         canandgyro = map.get(AnalogInput.class, constants.gyroName);
-        pinpoint = map.get(GoBildaPinpointDriver.class, constants.pinpointHardwareMap);
+        gyroVoltageOffset = canandgyro.getVoltage();
+
         parallelEncoder = new OverflowEncoder(new RawEncoder(map.get(DcMotorEx.class, constants.parallelEncoder)));
         parallelEncoder.setDirection(constants.forwardEncoderDirection);
         lastParallel = new DualNum<>(parallelEncoder.getPositionAndVelocity().position);
@@ -78,11 +80,11 @@ public class SmartLocalizerPedro implements Localizer {
         perpendicularEncoder = new OverflowEncoder(new RawEncoder(map.get(DcMotorEx.class, constants.perpendicularEncoder)));
         perpendicularEncoder.setDirection(constants.strafeEncoderDirection);
         lastPerpendicular = new DualNum<>(perpendicularEncoder.getPositionAndVelocity().position);
-        gyroVoltageOffset = canandgyro.getVoltage();
 
-        pinpoint.setOffsets(-constants.forwardPodY, constants.strafePodX, constants.distanceUnit);
+        pinpoint = map.get(GoBildaPinpointDriver.class, constants.pinpointHardwareMap);
         pinpoint.setEncoderResolution(1 / constants.encoderResolution, DistanceUnit.MM);
         pinpoint.setEncoderDirections(constants.pinpoint_forwardEncoderDirection, constants.pinpoint_strafeEncoderDirection);
+        pinpoint.setOffsets(-constants.forwardPodY, constants.strafePodX, constants.distanceUnit);
 
         resetPinpoint();
         setPose(startPose);
@@ -91,20 +93,17 @@ public class SmartLocalizerPedro implements Localizer {
 
     @Override
     public Pose getPose() {
-        Pose translatedPose = new Pose(pose.position.x.get(0), pose.position.y.get(0), pose.heading.log().get(0));
-        return translatedPose;
+        return new Pose(pose.position.x.get(0), pose.position.y.get(0), pose.heading.log().get(0));
     }
 
     @Override
     public Pose getVelocity() {
-        Pose translatedPose = new Pose(pose.velocity().linearVel.x.get(0), pose.velocity().linearVel.y.get(0), pose.velocity().angVel.get(0));
-        return translatedPose;
+        return new Pose(pose.velocity().linearVel.x.get(0), pose.velocity().linearVel.y.get(0), pose.velocity().angVel.get(0));
     }
 
     @Override
     public Vector getVelocityVector() {
-        Vector Vel2d = new Vector(pose.velocity().linearVel.x.get(0), pose.velocity().linearVel.y.get(0));
-        return Vel2d;
+        return new Vector(pose.velocity().linearVel.x.get(0), pose.velocity().linearVel.y.get(0));
     }
 
     @Override
@@ -115,13 +114,20 @@ public class SmartLocalizerPedro implements Localizer {
     @Override
     public void setPose(Pose setPose) {
         Pose2d translatedPose = new Pose2d(setPose.getX(), setPose.getY(), setPose.getHeading());
-        setPose(translatedPose);
+        setPosition(translatedPose);
     }
 
-    private void setPose(Pose2d pose) // IT WAS POSE2D ORACLEFTC THIS WHOLE TIME???
+    private void setPosition(Pose2d newPose) // IT WAS POSE2D ORACLEFTC THIS WHOLE TIME???
     {
-        gyroVoltageOffset=canandgyro.getVoltage()-pose.heading.log() * 3.3/360;
-        Pose2D translatedPose = new Pose2D(DistanceUnit.INCH, pose.position.x, pose.position.y, AngleUnit.RADIANS, pose.heading.log());
+        gyroVoltageOffset=canandgyro.getVoltage()-newPose.heading.log() * 3.3/360;
+        pose = new Pose2dDual<Time>(
+                new Vector2dDual<Time>(
+                        new DualNum<>(newPose.position.x, 0),
+                        new DualNum<>(newPose.position.y, 0)
+                ),
+                Rotation2dDual.exp(new DualNum<>(newPose.heading.log(), 0)));
+
+        Pose2D translatedPose = new Pose2D(DistanceUnit.INCH, newPose.position.x, newPose.position.y, AngleUnit.RADIANS, newPose.heading.log());
         pinpoint.setPosition(translatedPose);
     }
 
@@ -166,6 +172,30 @@ public class SmartLocalizerPedro implements Localizer {
         lastHeading=Rotation2dDual.constant(heading,1);
         lastParallel=new DualNum<>(parallel.get(0));
         lastPerpendicular=new DualNum<>(perpendicular.get(0));
+    }
+
+    public void getTelemetry(Telemetry telemetry)
+    {
+        telemetry.addData("rawGyroAngle", AngleUnit.normalizeDegrees((-canandgyro.getVoltage()) * 360.0 / 3.3));
+        telemetry.addData("offsetGyroAngle", AngleUnit.normalizeDegrees((canandgyro.getVoltage()-gyroVoltageOffset) * 360.0 / 3.3));
+//        telemetry.addData("pinpointFrequency", pinpoint.getFrequency());
+//
+//        telemetry.addData("parallelEncoder", parallelEncoder.getPositionAndVelocity().position);
+//        telemetry.addData("perpendicularEncoder", perpendicularEncoder.getPositionAndVelocity().position);
+//        telemetry.addData("internalHeading", pose.heading.value().log());
+
+
+        telemetry.addData("X", pose.position.x.get(0));
+        telemetry.addData("Y", pose.position.y.get(0));
+        telemetry.addData("HEADING", Math.toDegrees(pose.heading.log().get(0)));
+
+//         Pinpoint debug
+        com.smartcluster.oracleftc.math.Pose2d pinpointPose = getPinpointPosition().value();
+
+        telemetry.addData("Pinpoint X", pinpointPose.position.x);
+        telemetry.addData("Pinpoint Y", pinpointPose.position.y);
+        telemetry.addData("Pinpoint HEADING", Math.toDegrees(pinpointPose.heading.log()));
+//         --------------
     }
 
     @Override
@@ -242,16 +272,16 @@ public class SmartLocalizerPedro implements Localizer {
         );
     }
 
-    public Pose2dDual<Time> resetStartPose()
-    {
-        return new Pose2dDual<Time>(
-                new Vector2dDual<Time>(
-                        new DualNum<>(0, 0),
-                        new DualNum<>(0, 0)
-                ).div(25.4),
-                Rotation2dDual.exp(new DualNum<>(0, 0))
-        );
-    }
+//    public Pose2dDual<Time> resetStartPose()
+//    {
+//        return new Pose2dDual<Time>(
+//                new Vector2dDual<Time>(
+//                        new DualNum<>(0, 0),
+//                        new DualNum<>(0, 0)
+//                ).div(25.4),
+//                Rotation2dDual.exp(new DualNum<>(0, 0))
+//        );
+//    }
 
     boolean isValidPose(Pose2dDual<Time> newPose)
     {

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
@@ -14,6 +15,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+//@Configurable
 public class Constants {
 
     public static FollowerConstants followerConstants = new FollowerConstants()
@@ -89,23 +91,23 @@ public class Constants {
 //            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
     public static SmartLocalizerConstants smartLocalizerConstants = new SmartLocalizerConstants()
-            .perpendicularEncoder_HardwareMapName("frontRight")
-            .parallelEncoder_HardwareMapName("frontLeft")
+            .parallelEncoder_HardwareMapName("frontRight")
+            .perpendicularEncoder_HardwareMapName("frontLeft")
             .gyroName("canandgyro")
 
-            .forwardPodY(51.89862/25.4) //offset of the forward encoder from the center of the robot in inches
-            .strafePodX(0.74927323/25.4) //offset of the strafe encoder from the center of the robot in inches
+            .forwardPodY(-51.89862) //offset of the forward encoder from the center of the robot in inches
+            .strafePodX(0.74927323) //offset of the strafe encoder from the center of the robot in inches
             .distanceUnit(DistanceUnit.MM)
             .pinpointHardwareMap("pinpoint")
 
-            .pinpoint_forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
-            .pinpoint_strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
+            .pinpoint_forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
+            .pinpoint_strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
 
             .encoderResolution(1/19.85017497812804) // ((Also overrides Pinpoint's resolution)) - R
             .pinpointTimeDelta(1000)
             .pinpointRejectionThreshold(3)
-            .forwardEncoderDirection(DcMotorSimple.Direction.REVERSE)
-            .strafeEncoderDirection(DcMotorSimple.Direction.REVERSE);
+            .forwardEncoderDirection(DcMotorSimple.Direction.FORWARD)
+            .strafeEncoderDirection(DcMotorSimple.Direction.FORWARD);
 
     public static PathConstraints pathConstraints = new PathConstraints(
             0.99,

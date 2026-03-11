@@ -128,11 +128,11 @@ public class SmartLocalizerConstants {
         encoderResolution = 1/19.85017497812804;
         forwardEncoderDirection = DcMotorSimple.Direction.REVERSE;
         strafeEncoderDirection = DcMotorSimple.Direction.REVERSE;
-        forwardPodY = 51.89862/25.4;
-        strafePodX = 0.74927323/25.4;
+        forwardPodY = 51.89862;
+        strafePodX = 0.74927323;
         distanceUnit = DistanceUnit.MM;
-        pinpoint_forwardEncoderDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
-        pinpoint_strafeEncoderDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+        pinpoint_forwardEncoderDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+        pinpoint_strafeEncoderDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
         pinpointHardwareMap = "pinpoint";
         gyroName = "canandgyro";
         pinpointTimeDelta = 1000;
