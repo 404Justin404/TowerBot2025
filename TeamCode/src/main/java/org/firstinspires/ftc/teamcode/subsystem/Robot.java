@@ -51,21 +51,12 @@ public class Robot {
 
     public Command reset()
     {
-        return new SequentialCommand(
-                new ParallelCommand(
-                        turret.reset(),
-                        intake.idleIntake()
-                )
+        return new ParallelCommand(
+                turret.reset(),
+                intake.idleIntake()
         );
     }
 
-    public Command Update(){
-    {
-        return new ParallelCommand(
-
-                turret.update()
-        );
-    }}
     public Command update()
     {
         return new ParallelCommand(

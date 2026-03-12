@@ -35,7 +35,7 @@ import java.util.List;
 // this one drives to a good point to "scout" for balls before driving to them. it seems that cam has not enough fov, so we are going to drive closer.
 // TODO: maybe add a "safety" path: if not over two balls were collected, make a new path to drive to corner?
 @Configurable
-@Autonomous(name="Testing Auto", group="Auto")
+@Autonomous(name="Red Close Auto", group="Auto")
 public class RedClosePaths extends LinearOpMode {
 
     private static Command PedroToCommand(PathChain path, boolean holdEnd) {
@@ -56,7 +56,7 @@ public class RedClosePaths extends LinearOpMode {
     private TelemetryManager panelsTelemetry;
     private static SequentialCommand SequenceAuto;
     protected boolean isRed = false;
-    private final Pose startPose = new Pose(86.4994731296101, 16.729188619599572, Math.toRadians(-180));
+    private final Pose startPose = new Pose(86.4994731296101, 6.179135932560596, Math.toRadians(-180));
     private final Pose goalPose = new Pose(140.5,140.5,Math.toRadians(-135));
 //    private PathChain intakeCorner,intakePile1,  intakeThird,intakePile2,intakePile3,
 //                      shootCorner, shootThird, lookPile1,  shootPile1, lookPile2,  shootPile2, lookPile3,  shootPile3;
@@ -96,12 +96,11 @@ public class RedClosePaths extends LinearOpMode {
         PreShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(79.519, 9.214),
-                                new Pose(83.616, 23.577)
+                                new Pose(86.651, 6.179),
+                                new Pose(89.577, 15.868)
                         )
                 )
-                .setBrakingStart(0.81)
-                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-115))
+                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-120))
                 .build();
 
         Stack2 = follower.pathBuilder()
@@ -169,51 +168,52 @@ public class RedClosePaths extends LinearOpMode {
         Stack1 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(83.616, 23.577),
-                                new Pose(95.210, 40.162),
-                                new Pose(129.910, 42.910)
-                    )
+                                new Pose(89.577, 15.868),
+                                new Pose(94.319, 36.763),
+                                new Pose(132.113, 36.359)
+                        )
                 )
-                .setBrakingStart(0.81)
-
                 .setTangentHeadingInterpolation()
                 .build();
 
         Stack1Shoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(129.910, 42.910),
-                                new Pose(83.616, 23.577)
+                                new Pose(132.113, 36.359),
+                                new Pose(89.123, 15.647)
                         )
                 )
-                .setBrakingStart(0.81)
-
-                .setLinearHeadingInterpolation(Math.toRadians(0),Math.toRadians(-115))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-115))
                 .build();
+
 
         HumanIntake = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(83.616, 23.577),
-                                new Pose(128.371, 23.209),
-                                new Pose(133.278, 19.406)
+                                new Pose(89.123, 15.647),
+                                new Pose(137.014, 42.393),
+                                new Pose(135.589, 9.547)
                         )
                 )
-                .setBrakingStart(0.81)
-
                 .setTangentHeadingInterpolation()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(135.589, 9.547),
+                                new Pose(132.179, 14.047),
+                                new Pose(127.969, 10.119)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(-90))
                 .build();
 
         HumanShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(133.278, 19.406),
-                                new Pose(83.616, 23.577)
+                                new Pose(135.589, 9.547),
+                                new Pose(89.394, 15.850)
                         )
                 )
-                .setBrakingStart(0.81)
-
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-115))
+                .setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(-115))
                 .build();
     }
 

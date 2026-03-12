@@ -85,7 +85,7 @@ public class DistTeleOp extends LinearOpMode {
                 .transition(TeleOpState.OUTTAKE, TeleOpState.IDLE, driverGamepad.circle.up(),
                         robot.intake.idleIntake())
 
-                .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, () -> driverGamepad.left_trigger.get() >= 0.5,
+                .transition(TeleOpState.IDLE, TeleOpState.PRESHOOT, () -> driverGamepad.left_trigger.get() >= 0.2,
                         new SequentialCommand(
                                 robot.intake.slowIntake(),
                                 new InstantCommand(()->robot.turret.isAboutToShot.set(true))
@@ -125,7 +125,7 @@ public class DistTeleOp extends LinearOpMode {
 
             CurrentState = fsm.getCurrentState();
 
-            if (driverGamepad.left_trigger.get() >= 0.5) preshoot_onhold.reset();
+            if (driverGamepad.left_trigger.get() >= 0.7) preshoot_onhold.reset();
 
             // Telemetry
 //            telemetry.addData("Intake voltage",robot.intake.getCurrentAmps());

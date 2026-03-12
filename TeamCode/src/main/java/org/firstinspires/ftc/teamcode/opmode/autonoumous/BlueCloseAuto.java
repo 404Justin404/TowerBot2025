@@ -1,7 +1,6 @@
-
 package org.firstinspires.ftc.teamcode.opmode.autonoumous;
 
-
+import android.media.audiofx.Visualizer;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -10,14 +9,10 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
-import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.smartcluster.oracleftc.commands.Command;
 import com.smartcluster.oracleftc.commands.CommandScheduler;
 import com.smartcluster.oracleftc.commands.InstantCommand;
@@ -29,24 +24,16 @@ import com.smartcluster.oracleftc.utils.Performance;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.Tuning;
-import org.firstinspires.ftc.teamcode.roadrunner.Drawing;
+import org.firstinspires.ftc.teamcode.pedroPathing.SmartLocalizerPedro;
 import org.firstinspires.ftc.teamcode.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.subsystem.MecanumDrive;
-import org.firstinspires.ftc.teamcode.subsystem.Robot;
 import org.firstinspires.ftc.teamcode.subsystem.Turret;
-import org.firstinspires.ftc.teamcode.util.calibration.new_fsm.State;
-import org.firstinspires.ftc.teamcode.util.calibration.new_fsm.StateMachine;
-import org.firstinspires.ftc.teamcode.util.calibration.new_fsm.Transition;
 
 import java.util.List;
-import java.util.Stack;
 
-// this one drives to a good point to "scout" for balls before driving to them. it seems that cam has not enough fov, so we are going to drive closer.
-// TODO: maybe add a "safety" path: if not over two balls were collected, make a new path to drive to corner?
 @Configurable
-@Autonomous(name="Tuning Auto", group="Auto")
-public class AutoTuning extends LinearOpMode {
+@Autonomous(name="Blue Close Auto", group="Auto")
+public class BlueCloseAuto extends LinearOpMode {
 
     private static Command PedroToCommand(PathChain path, boolean holdEnd) {
         return Command.builder()
@@ -57,6 +44,13 @@ public class AutoTuning extends LinearOpMode {
                 .finished(() -> !follower.isBusy())
                 .build();
     }
+
+//    private static Command waitForHeading(double toleranceErr)
+//    {
+//        return Command.builder()
+//                .build();
+//    }
+
     List<LynxModule> lynxModules;
 
 
@@ -64,10 +58,10 @@ public class AutoTuning extends LinearOpMode {
     private final CommandScheduler scheduler = new CommandScheduler();
     private final MovingAverageFilter loopTimeFilter = new MovingAverageFilter(50);
     private TelemetryManager panelsTelemetry;
-    private SequentialCommand SequenceAuto;
+    private static  SequentialCommand SequenceAuto, SequenceShoot, SequenceGate;
     protected boolean isRed = false;
     private final Pose startPose = new Pose(25.045310853530054, 128.32876712328766, Math.toRadians(-37));
-
+    private final Pose goalPose = new Pose(4.5,140.5,Math.toRadians(-45));
     private final double shootPower = 2200;
     private final double turretPitch = 0.05;
 
@@ -84,6 +78,10 @@ public class AutoTuning extends LinearOpMode {
     public PathChain GateOut;
     public PathChain Stack1;
     public PathChain Stack1Shoot;
+
+    public PathChain Gate;
+    public PathChain ReleaseGate;
+    public PathChain ShootRelease;
 
     private Turret flywheel;
     private MecanumDrive drive;
@@ -104,133 +102,138 @@ public class AutoTuning extends LinearOpMode {
         }
     }
 
+
     public void buildPaths() {
-
-
         PreShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
                                 new Pose(25.045, 128.329),
-                                new Pose(58.883, 84.62)
+                                new Pose(58.428, 85.012)
                         )
                 )
-                .setVelocityConstraint(60)
+                .setVelocityConstraint(50)
                 .setLinearHeadingInterpolation(Math.toRadians(-37), Math.toRadians(-45))
                 .build();
 
         Stack3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(58.883, 84.628),
+                                new Pose(58.428, 85.012),
                                 new Pose(43.329, 83.856),
-                                new Pose(18.795, 84.467)
+                                new Pose(26.5, 84.467)
                         )
                 )
-                .setBrakingStart(0.8)
-                .setVelocityConstraint(60)
+//                .setBrakingStart(0.8)
                 .setTangentHeadingInterpolation()
                 .build();
 
         Stack3Shoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(18.795, 84.467),
-                                new Pose(58.883, 84.628)
+                                new Pose(26.5, 84.467),
+                                new Pose(58.428, 85.012)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-45))
+                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
                 .build();
 
         Stack2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(58.883, 84.628),
-                                new Pose(48.854, 55.743),
-                                new Pose(14.531, 54.492)
+                                new Pose(58.428, 85.012),
+                                new Pose(48.854, 58.743),
+                                new Pose(18.531, 58)
                         )
                 )
-                .setVelocityConstraint(50)
                 .setTangentHeadingInterpolation()
                 .build();
 
         Stack2Shoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(14.5, 54.4),
-                                new Pose(58.883, 84.628)
+                                new Pose(18.531, 58),
+                                new Pose(58.428, 85.012)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-45))
+                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
                 .build();
 
         GateIn = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(58.883, 84.628),
-                                new Pose(52.852, 57.602),
-                                new Pose(30.564, 57.303)
+                                new Pose(58.428, 85.012),
+                                new Pose(52.852, 58.8),
+                                new Pose(33, 59.5)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(-45), Math.toRadians(145))
+
+//                .setLinearHeadingInterpolation(Math.toRadians(-51), Math.toRadians(150),0.7)
+                .setLinearHeadingInterpolation(Math.toRadians(-50.5), Math.toRadians(155))
+                .setVelocityConstraint(55)
                 .build();
 
         GateIntermediary = follower.pathBuilder()
                 .addPath(
-                        new BezierLine(
-                                new Pose(40.564, 53.303),
-                                new Pose(13.084, 60)
+                        new BezierCurve(
+                                new Pose(33, 59.5),
+                                new Pose(33,55),
+                                new Pose(14.5, 58.75)
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(147))
+                .setConstantHeadingInterpolation(Math.toRadians(155))
+                .setVelocityConstraint(45)
                 .build();
+
         GateOut = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(13.114, 60),
-                                new Pose(58.883, 84.628)
+                                new Pose(14.5, 58.75),
+                                new Pose(58.428, 85.012)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(-45))
+                .setVelocityConstraint(50)
+                .setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(-50.5))
                 .build();
 
-        GateINT = follower.pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Pose(58.880, 84.536),
-                                new Pose(32.259, 48.711),
-                                new Pose(11.886, 59.346)
-                        )
-                )
-                .setTangentHeadingInterpolation()
-                .build();
+//        GateINT = follower.pathBuilder()
+//                .addPath(
+//                        new BezierCurve(
+//                                new Pose(58.880, 84.536),
+//                                new Pose(32.259, 48.711),
+//                                new Pose(14.886, 59.346)
+//                        )
+//                )
+//                .setTangentHeadingInterpolation()
+//                .build();
 
-        GateRelease = follower.pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Pose(11.886, 59.346),
-                                new Pose(26.880, 64.930),
-                                new Pose(16.615, 68.693)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
-                .build();
+//        GateRelease = follower.pathBuilder()
+//                .addPath(
+//                        new BezierCurve(
+//                                new Pose(14.886, 59.346),
+//                                new Pose(26.880, 64.930),
+//                                new Pose(16.615, 68.693)
+//                        )
+//                )
+//
+//                .setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
+//                .build();
 
-        GateShoot = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(16.615, 68.693),
-                                new Pose(58.643, 84.702)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-45))
-                .build();
+//        GateShoot = follower.pathBuilder()
+//                .addPath(
+//                        new BezierLine(
+//                                new Pose(16.615, 68.693),
+//                                new Pose(58.428, 85.012)
+//                        )
+//                )
+//                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-52))
+//                .build();
 
         Stack1 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
                                 new Pose(58.643, 84.702),
                                 new Pose(66.450, 31.558),
-                                new Pose(11.203, 35.565)
+                                new Pose(14.203, 35.565)
                         )
                 )
                 .setTangentHeadingInterpolation()
@@ -239,14 +242,12 @@ public class AutoTuning extends LinearOpMode {
         Stack1Shoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(11.203, 35.565),
+                                new Pose(14.203, 35.565),
                                 new Pose(58.803, 84.498)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-45))
+                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
                 .build();
-
-
     }
 
     @Override
@@ -256,49 +257,83 @@ public class AutoTuning extends LinearOpMode {
         drive = new MecanumDrive(hardwareMap,telemetry);
 
 
-
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         follower = Constants.createFollower(hardwareMap);
-        sleep(200);
+        follower.setMaxPower(0.9);
         follower.update();
         buildPaths();
 
+        SmartLocalizerPedro localizerPedro = (SmartLocalizerPedro) follower.getPoseTracker().getLocalizer();
+
+        // Repetitive Command
+        SequenceShoot = new SequentialCommand(
+                intake.intake(),
+                flywheel.velAuto(shootPower,turretPitch),
+                flywheel.WaitForRPM(1000),
+                new InstantCommand(flywheel::releaseShooter),
+                new WaitCommand(550),
+                new InstantCommand(flywheel::blockShooter),
+                intake.slowIntake()
+        );
+
+        SequenceGate = new SequentialCommand(
+                PedroToCommand(GateIn,true),
+                new ParallelCommand(
+                        intake.intake(),
+                        PedroToCommand(GateIntermediary,true)
+                ),
+                new WaitCommand(1200),
+                PedroToCommand(GateOut,true)
+        );
+
+
+
         SequenceAuto = new SequentialCommand(
                 PedroToCommand(PreShoot, true),
+                SequenceShoot,
+
+            //END OF PRESHOOT
+                new ParallelCommand(
+                        intake.intake(),
+                        PedroToCommand(Stack3,false)
+                ),
+
+                PedroToCommand(Stack3Shoot,true),
+                SequenceShoot,
+            //END OF STACK 3
 
                 new ParallelCommand(
                         intake.intake(),
-                        PedroToCommand(Stack2,true)
+                        PedroToCommand(Stack2,false)
                 ),
 
-                new WaitCommand(1500),
                 PedroToCommand(Stack2Shoot,true),
+                SequenceShoot,
+            //END OF STACK 2
 
-                intake.intake(),
-                new InstantCommand(()->flywheel.setTargetVelocity(3100)),
-                new InstantCommand(()->flywheel.setHoodAngle(0.15)),
-                flywheel.WaitForRPM(2000),
-                new InstantCommand(flywheel::releaseShooter),
-                new WaitCommand(1000),
-                new InstantCommand(flywheel::blockShooter),
+                SequenceGate, // FIRST GATE
+                SequenceShoot,
+            //END OF GATE 1
 
-                PedroToCommand(GateIn,false),
-                PedroToCommand(GateIntermediary,true),
-                intake.intake(),
+                SequenceGate, // SECOND GATE
+                SequenceShoot,
+            // END OF GATE 2
 
-                new WaitCommand(1000),
-                PedroToCommand(GateOut,true),
+                SequenceGate, // THIRD GATE
+                SequenceShoot,
+            //END OF GATE 3
+//                new ParallelCommand(
+//                        intake.intake(),
+//                        PedroToCommand(Stack1,true)
+//                ),
 
-                intake.intake(),
-                new InstantCommand(()->flywheel.setTargetVelocity(3100)),
-                new InstantCommand(()->flywheel.setHoodAngle(0.15)),
-                flywheel.WaitForRPM(2000),
-                new InstantCommand(flywheel::releaseShooter),
-                new WaitCommand(1000),
-                new InstantCommand(flywheel::blockShooter)
+//                PedroToCommand(Stack1Shoot,true),
+//                SequenceShoot,
 
-
+                intake.stop(),
+                new InstantCommand(flywheel::disable)
+             //END OF STACK 1
 //                PedroToCommand(intakeCorner, false)
         );
 
@@ -316,7 +351,6 @@ public class AutoTuning extends LinearOpMode {
         scheduler.schedule(SequenceAuto, flywheel.update());
 
         while(opModeIsActive()){
-
             for (LynxModule lynxModule : lynxModules) {
                 lynxModule.clearBulkCache();
                 lynxModule.getBulkData();
@@ -326,9 +360,10 @@ public class AutoTuning extends LinearOpMode {
             follower.update();
             panelsTelemetry.update();
 
-            log("Target Pose", follower.getCurrentPath().endPose());
             log("Intake voltage",intake.getCurrentAmps());
             intake.BallNumber(intake.getCurrentAmps());
+
+           localizerPedro.getTelemetry(telemetry);
 //            log("Actual Localizer Pose", follower.getPose().toString());
             log("Pose x", follower.getPose().getX());
             log("Pose y", follower.getPose().getY());

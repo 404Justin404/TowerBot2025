@@ -189,7 +189,12 @@ public class Turret extends Subsystem {
                 })
                 .build();
     }
-
+    public Command velAuto(double velocity,double angle){
+        return new SequentialCommand(
+                new InstantCommand(()->setTargetVelocity(velocity)),
+                new InstantCommand(()->setHoodAngle(angle))
+        );
+    }
 
     public Command update() {
             return Command.builder()
