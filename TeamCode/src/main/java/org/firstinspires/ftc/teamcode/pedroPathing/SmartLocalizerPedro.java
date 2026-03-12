@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.ftc.PoseConverter;
 import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
@@ -32,6 +33,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import java.util.LinkedList;
 import java.util.Queue;
 
+@Configurable
 public class SmartLocalizerPedro implements Localizer {
 
     // Hardwares ----
@@ -56,7 +58,7 @@ public class SmartLocalizerPedro implements Localizer {
         VELOCITY_BASED,
         DISTANCE_BASED
     };
-    public TypeOfCheck typeOfCheck = TypeOfCheck.DISTANCE_BASED;
+    public TypeOfCheck typeOfCheck = TypeOfCheck.VELOCITY_BASED;
 
     // Variables to read before sleeping at 1 AM
     private double gyroVoltageOffset;
@@ -66,6 +68,8 @@ public class SmartLocalizerPedro implements Localizer {
     private final ElapsedTime pinpointTime = new ElapsedTime();
     private final IMURotationTracker tracker = new IMURotationTracker();
     private int validPosesCount = 0, invalidPosesCount = 0;
+    private static double velocityPositionRejectionThreshold = 2.3;
+    private static double velocityHeadingRejectionThreshold = 0.4;
     // --------------
 
     public SmartLocalizerPedro(HardwareMap map, SmartLocalizerConstants constants)
@@ -295,10 +299,10 @@ public class SmartLocalizerPedro implements Localizer {
             case DISTANCE_BASED:
                 validSituation = pose.position.minus(newPose.position).sqrNorm().get(0) <= constants.pinpointRejectionThreshold * constants.pinpointRejectionThreshold;
                 break;
-//            case VELOCITY_BASED:
-//                validSituation = pose.velocity().linearVel.sqrNorm().get(0) <= velocityPositionRejectionThreshold * velocityPositionRejectionThreshold;
-//                validSituation &= Math.abs(pose.heading.velocity().get(0)) <= velocityHeadingRejectionThreshold;
-//                break;
+            case VELOCITY_BASED:
+                validSituation = pose.velocity().linearVel.sqrNorm().get(0) <= velocityPositionRejectionThreshold * velocityPositionRejectionThreshold;
+                validSituation &= Math.abs(pose.heading.velocity().get(0)) <= velocityHeadingRejectionThreshold;
+                break;
         }
         return !isNull && validSituation;
     }
