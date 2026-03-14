@@ -1,8 +1,6 @@
-
 package org.firstinspires.ftc.teamcode.opmode.autonoumous;
 
-
-
+import android.media.audiofx.Visualizer;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -33,11 +31,9 @@ import org.firstinspires.ftc.teamcode.subsystem.Turret;
 
 import java.util.List;
 
-// this one drives to a good point to "scout" for balls before driving to them. it seems that cam has not enough fov, so we are going to drive closer.
-// TODO: maybe add a "safety" path: if not over two balls were collected, make a new path to drive to corner?
 @Configurable
-@Autonomous(name="Red Close Auto", group="Auto")
-public class RedClosePaths extends LinearOpMode {
+@Autonomous(name="RavenTechBlueClose", group="Auto")
+public class RavenTechBlueClose extends LinearOpMode {
 
     private static Command PedroToCommand(PathChain path, boolean holdEnd) {
         return Command.builder()
@@ -48,6 +44,13 @@ public class RedClosePaths extends LinearOpMode {
                 .finished(() -> !follower.isBusy())
                 .build();
     }
+
+//    private static Command waitForHeading(double toleranceErr)
+//    {
+//        return Command.builder()
+//                .build();
+//    }
+
     List<LynxModule> lynxModules;
 
 
@@ -55,33 +58,35 @@ public class RedClosePaths extends LinearOpMode {
     private final CommandScheduler scheduler = new CommandScheduler();
     private final MovingAverageFilter loopTimeFilter = new MovingAverageFilter(50);
     private TelemetryManager panelsTelemetry;
-    private static SequentialCommand SequenceAuto,SequenceGate,SequenceShoot;
+    private static  SequentialCommand SequenceAuto, SequenceShoot, SequenceGate;
     protected boolean isRed = false;
-    private final Pose startPose = new Pose(119.57850368809272, 127.87355110642783, Math.toRadians(-144));
-    private final Pose goalPose = new Pose(140.5,140.5,Math.toRadians(-135));
-//    private PathChain intakeCorner,intakePile1,  intakeThird,intakePile2,intakePile3,
-//                      shootCorner, shootThird, lookPile1,  shootPile1, lookPile2,  shootPile2, lookPile3,  shootPile3;
-public PathChain PreShoot;
-    public PathChain Stack3;
-    public PathChain Stack3Shoot;
+    private final Pose startPose = new Pose(25.045310853530054, 128.32876712328766, Math.toRadians(-37));
+    private final Pose goalPose = new Pose(4.5,140.5,Math.toRadians(-45));
+    private final double shootPower = 2200;
+    private final double turretPitch = 0.05;
+
+    public PathChain PreShoot;
     public PathChain Stack2;
     public PathChain Stack2Shoot;
-    public PathChain Stack1Inter;
+    public PathChain GateOpen;
+    public PathChain GateShoot;
+    public PathChain Stack3;
+    public PathChain GateIn,GateIntermediary;
+    public PathChain Stack3Shoot;
+    public PathChain GateRelease;
+    public PathChain GateINT;
+    public PathChain GateOut;
     public PathChain Stack1;
     public PathChain Stack1Shoot;
-    public PathChain GateRelease;
-    public PathChain HumanIntake;
-    public PathChain HumanShoot;
-    public PathChain GateInter;
-    public PathChain GateIn;
-    public PathChain GateOut;
+    public PathChain HumanINTAKE;
+
+    public PathChain Gate;
+    public PathChain ReleaseGate;
+    public PathChain ShootRelease;
 
     private Turret flywheel;
     private MecanumDrive drive;
     private Intake intake;
-
-    private final double shootPower = 2200;
-    private final double turretPitch = 0.05;
 
     private void log(String caption, Object... text) {
         if (text.length == 1) {
@@ -100,44 +105,45 @@ public PathChain PreShoot;
 
 
     public void buildPaths() {
-
         PreShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(119.579, 127.874),
-                                new Pose(85.017, 84.377)
+                                new Pose(25.045, 128.329),
+                                new Pose(58.428, 85.012)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(-144), Math.toRadians(-134))
+                .setVelocityConstraint(50)
+                .setLinearHeadingInterpolation(Math.toRadians(-37), Math.toRadians(-45))
                 .build();
 
         Stack3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(85.017, 84.377),
-                                new Pose(106.249, 82.164),
-                                new Pose(125.640, 83.305)
+                                new Pose(58.428, 85.012),
+                                new Pose(43.329, 83.856),
+                                new Pose(25.5, 84.467)
                         )
                 )
+//                .setBrakingStart(0.8)
                 .setTangentHeadingInterpolation()
                 .build();
 
         Stack3Shoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(125.640, 83.305),
-                                new Pose(85.017, 84.377)
+                                new Pose(25.5, 84.467),
+                                new Pose(58.428, 85.012)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-134))
+                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
                 .build();
 
         Stack2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(87.927, 86.451),
-                                new Pose(89.423, 53.750),
-                                new Pose(129.488, 56.790)
+                                new Pose(58.428, 85.012),
+                                new Pose(48.854, 60.743),
+                                new Pose(17.2, 56)
                         )
                 )
                 .setTangentHeadingInterpolation()
@@ -146,29 +152,94 @@ public PathChain PreShoot;
         Stack2Shoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(129.488, 56.790),
-                                new Pose(85.017, 84.377)
+                                new Pose(17.2, 56),
+                                new Pose(58.428, 85.012)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-134))
+                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
                 .build();
 
-        Stack1Inter = follower.pathBuilder()
+        GateIn = follower.pathBuilder()
                 .addPath(
-                        new BezierLine(
-                                new Pose(87.603, 86.034),
-                                new Pose(93.226, 48.322)
+                        new BezierCurve(
+                                new Pose(58.428, 85.012),
+                                new Pose(52.852, 58.8),
+                                new Pose(32, 57.5)
                         )
                 )
-                .setTangentHeadingInterpolation()
+
+//                .setLinearHeadingInterpolation(Math.toRadians(-51), Math.toRadians(150),0.7)
+                .setLinearHeadingInterpolation(Math.toRadians(-50.5), Math.toRadians(155))
+                .setVelocityConstraint(55)
                 .build();
+
+        GateIntermediary = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(32, 58.5),
+                                new Pose(33,55),
+                                new Pose(17.5, 55.4)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(155))
+                .addPath(new BezierLine(
+                        new Pose(17.5, 55.4),
+                        new Pose(17.5,54)
+                ))
+                .setConstantHeadingInterpolation(155)
+                .setVelocityConstraint(45)
+                .build();
+
+        GateOut = follower.pathBuilder()
+                .addPath(
+                        new BezierLine(
+                                new Pose(17.5,54),
+                                new Pose(58.428, 85.012)
+                        )
+                )
+                .setVelocityConstraint(50)
+                .setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(-50.5))
+                .build();
+
+//        GateINT = follower.pathBuilder()
+//                .addPath(
+//                        new BezierCurve(
+//                                new Pose(58.880, 84.536),
+//                                new Pose(32.259, 48.711),
+//                                new Pose(14.886, 59.346)
+//                        )
+//                )
+//                .setTangentHeadingInterpolation()
+//                .build();
+
+//        GateRelease = follower.pathBuilder()
+//                .addPath(
+//                        new BezierCurve(
+//                                new Pose(14.886, 59.346),
+//                                new Pose(26.880, 64.930),
+//                                new Pose(16.615, 68.693)
+//                        )
+//                )
+//
+//                .setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
+//                .build();
+
+//        GateShoot = follower.pathBuilder()
+//                .addPath(
+//                        new BezierLine(
+//                                new Pose(16.615, 68.693),
+//                                new Pose(58.428, 85.012)
+//                        )
+//                )
+//                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-52))
+//                .build();
 
         Stack1 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(93.226, 48.322),
-                                new Pose(97.672, 32.536),
-                                new Pose(131.625, 36.255)
+                                new Pose(58.643, 84.702),
+                                new Pose(66.450, 31.558),
+                                new Pose(14.203, 35.565)
                         )
                 )
                 .setTangentHeadingInterpolation()
@@ -177,73 +248,22 @@ public PathChain PreShoot;
         Stack1Shoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(131.625, 36.255),
-                                new Pose(85.017, 84.377)
+                                new Pose(14.203, 35.565),
+                                new Pose(58.803, 84.498)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-134))
+                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
                 .build();
-
-        GateRelease = follower.pathBuilder()
+        HumanINTAKE = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(85.017, 84.377),
-                                new Pose(129.638, 69.438)
+                                new Pose(58.913, 84.937),
+                                new Pose(13.212, 8.418)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(-134), Math.toRadians(-90))
+                .setTangentHeadingInterpolation()
                 .build();
 
-        HumanIntake = follower.pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Pose(129.638, 69.438),
-                                new Pose(122.166, 70.865),
-                                new Pose(135.222, 10.105)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(-90))
-                .build();
-
-        HumanShoot = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(135.222, 10.105),
-                                new Pose(85.017, 84.377)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(-134))
-                .build();
-
-        GateInter = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(85.017, 84.377),
-                                new Pose(108.854, 55.501)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(-134), Math.toRadians(34))
-                .build();
-
-        GateIn = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(108.854, 55.501),
-                                new Pose(131.801, 58.080)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(34))
-                .build();
-
-        GateOut = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(131.801, 58.080),
-                                new Pose(85.017, 84.377)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(34), Math.toRadians(-134))
-                .build();
     }
 
     @Override
@@ -251,6 +271,7 @@ public PathChain PreShoot;
         flywheel = new Turret(this);
         intake = new Intake(this);
         drive = new MecanumDrive(hardwareMap,telemetry);
+
 
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -261,7 +282,7 @@ public PathChain PreShoot;
 
         SmartLocalizerPedro localizerPedro = (SmartLocalizerPedro) follower.getPoseTracker().getLocalizer();
 
-
+        // Repetitive Command
         SequenceShoot = new SequentialCommand(
                 intake.intake(),
                 flywheel.velAuto(shootPower,turretPitch),
@@ -273,62 +294,56 @@ public PathChain PreShoot;
         );
 
         SequenceGate = new SequentialCommand(
-                PedroToCommand(GateInter,true),
+                PedroToCommand(GateIn,true),
                 new ParallelCommand(
                         intake.intake(),
-                        PedroToCommand(GateIn,true)
+                        PedroToCommand(GateIntermediary,true)
                 ),
-                new WaitCommand(1200),
+                new WaitCommand(1000),
                 PedroToCommand(GateOut,true)
         );
 
-                SequenceAuto = new SequentialCommand(
-                        PedroToCommand(PreShoot, true),
-                        SequenceShoot,
 
-                        //END OF PRESHOOT
-                        new ParallelCommand(
-                                intake.intake(),
-                                PedroToCommand(Stack3,false)
-                        ),
 
-                        PedroToCommand(Stack3Shoot,true),
-                        SequenceShoot,
-                        //END OF STACK 3
+        SequenceAuto = new SequentialCommand(
+                PedroToCommand(PreShoot, true),
+                SequenceShoot,
 
-                        new ParallelCommand(
-                                intake.intake(),
-                                PedroToCommand(Stack2,false)
-                        ),
+                //END OF PRESHOOT
 
-                        PedroToCommand(Stack2Shoot,true),
-                        SequenceShoot,
-                        //END OF STACK 2
+                new ParallelCommand(
+                        intake.intake(),
+                        PedroToCommand(Stack2,false)
+                ),
 
-                        SequenceGate, // FIRST GATE
-                        SequenceShoot,
-                        //END OF GATE 1
+                PedroToCommand(Stack2Shoot,true),
+                SequenceShoot,
+                //END OF STACK 2
 
-                        SequenceGate, // SECOND GATE
-                        SequenceShoot,
-                        // END OF GATE 2
+                SequenceGate, // FIRST GATE
+                SequenceShoot,
 
-                        SequenceGate, // THIRD GATE
-                        SequenceShoot,
-                        //END OF GATE 3
-//                new ParallelCommand(
-//                        intake.intake(),
-//                        PedroToCommand(Stack1,true)
-//                ),
+                SequenceGate, // FIRST GATE
+                SequenceShoot,
 
-//                PedroToCommand(Stack1Shoot,true),
+                new ParallelCommand(
+                        intake.intake(),
+                        PedroToCommand(Stack3,false)
+                ),
+                PedroToCommand(Stack3Shoot,true),
+                SequenceShoot,
+
+//                SequenceGate, // SECOND GATE
 //                SequenceShoot,
 
+//                PedroToCommand(Stack1,true),
+                new ParallelCommand(
+                        PedroToCommand(Stack3,true),
                         intake.stop(),
                         new InstantCommand(flywheel::disable)
-                        //END OF STACK 1
+                )//END OF STACK 1
 //                PedroToCommand(intakeCorner, false)
-                );
+        );
 
 
         waitForStart();
@@ -354,6 +369,7 @@ public PathChain PreShoot;
             panelsTelemetry.update();
 
 
+
 //            log("Actual Localizer Pose", follower.getPose().toString());
             log("Pose x", follower.getPose().getX());
             log("Pose y", follower.getPose().getY());
@@ -364,5 +380,5 @@ public PathChain PreShoot;
             telemetry.update();
         }
     }
- }
+}
 

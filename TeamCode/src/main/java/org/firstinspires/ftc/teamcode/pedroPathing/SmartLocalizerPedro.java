@@ -300,7 +300,7 @@ public class SmartLocalizerPedro implements Localizer {
                 validSituation = pose.position.minus(newPose.position).sqrNorm().get(0) <= constants.pinpointRejectionThreshold * constants.pinpointRejectionThreshold;
                 break;
             case VELOCITY_BASED:
-                validSituation = pose.velocity().linearVel.sqrNorm().get(0) <= velocityPositionRejectionThreshold * velocityPositionRejectionThreshold;
+                validSituation = pose.velocity().value().linearVel.sqrNorm() <= velocityPositionRejectionThreshold * velocityPositionRejectionThreshold;
                 validSituation &= Math.abs(pose.heading.velocity().get(0)) <= velocityHeadingRejectionThreshold;
                 break;
         }

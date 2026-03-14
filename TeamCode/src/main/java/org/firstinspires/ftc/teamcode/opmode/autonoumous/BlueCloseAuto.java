@@ -78,6 +78,7 @@ public class BlueCloseAuto extends LinearOpMode {
     public PathChain GateOut;
     public PathChain Stack1;
     public PathChain Stack1Shoot;
+    public PathChain HumanINTAKE;
 
     public PathChain Gate;
     public PathChain ReleaseGate;
@@ -120,7 +121,7 @@ public class BlueCloseAuto extends LinearOpMode {
                         new BezierCurve(
                                 new Pose(58.428, 85.012),
                                 new Pose(43.329, 83.856),
-                                new Pose(26.5, 84.467)
+                                new Pose(25.5, 84.467)
                         )
                 )
 //                .setBrakingStart(0.8)
@@ -130,7 +131,7 @@ public class BlueCloseAuto extends LinearOpMode {
         Stack3Shoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(26.5, 84.467),
+                                new Pose(25.5, 84.467),
                                 new Pose(58.428, 85.012)
                         )
                 )
@@ -141,8 +142,8 @@ public class BlueCloseAuto extends LinearOpMode {
                 .addPath(
                         new BezierCurve(
                                 new Pose(58.428, 85.012),
-                                new Pose(48.854, 58.743),
-                                new Pose(18.531, 58)
+                                new Pose(48.854, 60.743),
+                                new Pose(17.2, 56)
                         )
                 )
                 .setTangentHeadingInterpolation()
@@ -151,7 +152,7 @@ public class BlueCloseAuto extends LinearOpMode {
         Stack2Shoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(18.531, 58),
+                                new Pose(16.8, 56),
                                 new Pose(58.428, 85.012)
                         )
                 )
@@ -163,7 +164,7 @@ public class BlueCloseAuto extends LinearOpMode {
                         new BezierCurve(
                                 new Pose(58.428, 85.012),
                                 new Pose(52.852, 58.8),
-                                new Pose(33, 59.5)
+                                new Pose(32, 57.5)
                         )
                 )
 
@@ -175,24 +176,28 @@ public class BlueCloseAuto extends LinearOpMode {
         GateIntermediary = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(33, 59.5),
+                                new Pose(32, 58.5),
                                 new Pose(33,55),
-                                new Pose(14.5, 58.75)
+                                new Pose(15, 56.8)
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(155))
+                .setConstantHeadingInterpolation(Math.toRadians(157))
+                .addPath(new BezierLine(
+                        new Pose(15,56.8),
+                        new Pose(15,54)
+                ))
                 .setVelocityConstraint(45)
                 .build();
 
         GateOut = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(14.5, 58.75),
+                                new Pose(15,54),
                                 new Pose(58.428, 85.012)
                         )
                 )
                 .setVelocityConstraint(50)
-                .setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(-50.5))
+                .setLinearHeadingInterpolation(Math.toRadians(157), Math.toRadians(-50.5))
                 .build();
 
 //        GateINT = follower.pathBuilder()
@@ -248,6 +253,18 @@ public class BlueCloseAuto extends LinearOpMode {
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
                 .build();
+        HumanINTAKE = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(58.913, 84.937),
+                                new Pose(48.174, 45.816),
+                                new Pose(14.846, 33.393),
+                                new Pose(13.212, 8.418)
+                        )
+                )
+                .setTangentHeadingInterpolation()
+                .build();
+
     }
 
     @Override
@@ -283,7 +300,7 @@ public class BlueCloseAuto extends LinearOpMode {
                         intake.intake(),
                         PedroToCommand(GateIntermediary,true)
                 ),
-                new WaitCommand(1200),
+                new WaitCommand(1000),
                 PedroToCommand(GateOut,true)
         );
 
@@ -296,6 +313,18 @@ public class BlueCloseAuto extends LinearOpMode {
             //END OF PRESHOOT
                 new ParallelCommand(
                         intake.intake(),
+                        PedroToCommand(Stack2,false)
+                ),
+
+                PedroToCommand(Stack2Shoot,true),
+                SequenceShoot,
+                //END OF STACK 2
+
+                SequenceGate, // FIRST GATE
+                SequenceShoot,
+
+                new ParallelCommand(
+                        intake.intake(),
                         PedroToCommand(Stack3,false)
                 ),
 
@@ -303,37 +332,29 @@ public class BlueCloseAuto extends LinearOpMode {
                 SequenceShoot,
             //END OF STACK 3
 
+
+
+
+            //END OF GATE 1
                 new ParallelCommand(
                         intake.intake(),
-                        PedroToCommand(Stack2,false)
+                        PedroToCommand(Stack1,false)
                 ),
 
-                PedroToCommand(Stack2Shoot,true),
-                SequenceShoot,
-            //END OF STACK 2
 
-                SequenceGate, // FIRST GATE
+                PedroToCommand(Stack1Shoot,true),
                 SequenceShoot,
-            //END OF GATE 1
 
-                SequenceGate, // SECOND GATE
-                SequenceShoot,
-            // END OF GATE 2
 
-                SequenceGate, // THIRD GATE
-                SequenceShoot,
-            //END OF GATE 3
-//                new ParallelCommand(
-//                        intake.intake(),
-//                        PedroToCommand(Stack1,true)
-//                ),
-
-//                PedroToCommand(Stack1Shoot,true),
+//                SequenceGate, // SECOND GATE
 //                SequenceShoot,
 
+//                PedroToCommand(Stack1,true),
+                new ParallelCommand(
+                PedroToCommand(HumanINTAKE,true),
                 intake.stop(),
                 new InstantCommand(flywheel::disable)
-             //END OF STACK 1
+                )//END OF STACK 1
 //                PedroToCommand(intakeCorner, false)
         );
 
@@ -360,10 +381,8 @@ public class BlueCloseAuto extends LinearOpMode {
             follower.update();
             panelsTelemetry.update();
 
-            log("Intake voltage",intake.getCurrentAmps());
-            intake.BallNumber(intake.getCurrentAmps());
 
-           localizerPedro.getTelemetry(telemetry);
+
 //            log("Actual Localizer Pose", follower.getPose().toString());
             log("Pose x", follower.getPose().getX());
             log("Pose y", follower.getPose().getY());

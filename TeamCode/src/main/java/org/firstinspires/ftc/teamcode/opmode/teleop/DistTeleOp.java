@@ -9,7 +9,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.smartcluster.oracleftc.commands.CommandScheduler;
 import com.smartcluster.oracleftc.commands.InstantCommand;
+import com.smartcluster.oracleftc.commands.ParallelCommand;
 import com.smartcluster.oracleftc.commands.SequentialCommand;
+import com.smartcluster.oracleftc.commands.WaitCommand;
 import com.smartcluster.oracleftc.fsm.FSM;
 import com.smartcluster.oracleftc.math.filters.MovingAverageFilter;
 import com.smartcluster.oracleftc.utils.Performance;
@@ -113,6 +115,16 @@ public class DistTeleOp extends LinearOpMode {
                                 }),
                                 robot.intake.idleIntake()
                         ))
+                .transition(TeleOpState.IDLE,TeleOpState.LIFT,driverGamepad.dpad_up.pressed(),
+                        new SequentialCommand(
+                        new ParallelCommand(
+                                new InstantCommand(robot.turret::disable),
+                                robot.intake.stop(),
+                                robot.lift.liftUp()
+                        ),
+                        new WaitCommand(7000),
+                        robot.lift.hold()
+                        ))
 
                 .build(scheduler);
 
@@ -127,13 +139,9 @@ public class DistTeleOp extends LinearOpMode {
 
             if (driverGamepad.left_trigger.get() >= 0.7) preshoot_onhold.reset();
 
-            // Telemetry
-//            telemetry.addData("Intake voltage",robot.intake.getCurrentAmps());
-//            robot.intake.BallNumber(robot.intake.getCurrentAmps());
+
             telemetry.addData("Current State", CurrentState);
             telemetry.addData("Turret Velocity", robot.turret.getCurrentVelocity());
-            telemetry.addData("Intake voltage",robot.intake.getCurrentAmps());
-            robot.intake.BallNumber(robot.intake.getCurrentAmps());
             telemetry.addData("x", robot.drive.localizer.getPose().position.x.get(0));
             telemetry.addData("y", robot.drive.localizer.getPose().position.y.get(0));
             telemetry.addData("heading (deg)", Math.toDegrees(robot.drive.localizer.getPose().heading.log().get(0)));

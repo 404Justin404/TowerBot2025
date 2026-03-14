@@ -308,8 +308,7 @@ public class RedFarPaths extends LinearOpMode {
             follower.update();
             panelsTelemetry.update();
 
-            log("Intake voltage",intake.getCurrentAmps());
-            intake.BallNumber(intake.getCurrentAmps());
+
             log("Actual Localizer Pose", follower.getPose().toString());
             log("Pose x", follower.getPose().getX());
             log("Pose y", follower.getPose().getY());

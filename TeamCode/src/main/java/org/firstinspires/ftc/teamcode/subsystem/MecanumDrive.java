@@ -208,6 +208,7 @@ public class MecanumDrive  {
 
                     } else rx = rightStick.x * boost*0.9;
 
+
                     rx = -rx; // Thanks SmartLocalizer!!! I like it when you inverse my robot's rx!
 
                     double y,x;

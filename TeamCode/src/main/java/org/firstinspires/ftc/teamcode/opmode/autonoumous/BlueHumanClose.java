@@ -73,6 +73,14 @@ public class BlueHumanClose extends LinearOpMode {
     public PathChain Stack3;
     public PathChain GateIn,GateIntermediary;
     public PathChain Stack3Shoot;
+
+    public PathChain HumanIntake;
+    public PathChain HumanShoot;
+    public PathChain PureHumaIn;
+    public PathChain PureHumanOut;
+    public PathChain HumanINTAKE;
+    public PathChain HumanOUT;
+
     public PathChain GateRelease;
     public PathChain GateINT;
     public PathChain GateOut;
@@ -137,6 +145,7 @@ public class BlueHumanClose extends LinearOpMode {
                 .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
                 .build();
 
+
         Stack2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
@@ -158,7 +167,7 @@ public class BlueHumanClose extends LinearOpMode {
                 .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
                 .build();
 
-        GateIn = follower.pathBuilder()
+        GateIntermediary = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
                                 new Pose(58.428, 85.012),
@@ -172,27 +181,25 @@ public class BlueHumanClose extends LinearOpMode {
                 .setVelocityConstraint(55)
                 .build();
 
-        GateIntermediary = follower.pathBuilder()
+        GateIn = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(33, 59.5),
-                                new Pose(33,55),
-                                new Pose(14.5, 58.75)
+                                new Pose(20.516, 69.083),
+                                new Pose(23,55),
+                                new Pose(15.5, 12)
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(155))
-                .setVelocityConstraint(45)
+                .setConstantHeadingInterpolation(Math.toRadians(-120))
                 .build();
 
         GateOut = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(14.5, 58.75),
+                                new Pose(18.5, 12),
                                 new Pose(58.428, 85.012)
                         )
                 )
-                .setVelocityConstraint(50)
-                .setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(-50.5))
+                .setLinearHeadingInterpolation(Math.toRadians(-120), Math.toRadians(-50.5))
                 .build();
 
 //        GateINT = follower.pathBuilder()
@@ -206,18 +213,15 @@ public class BlueHumanClose extends LinearOpMode {
 //                .setTangentHeadingInterpolation()
 //                .build();
 
-//        GateRelease = follower.pathBuilder()
-//                .addPath(
-//                        new BezierCurve(
-//                                new Pose(14.886, 59.346),
-//                                new Pose(26.880, 64.930),
-//                                new Pose(16.615, 68.693)
-//                        )
-//                )
-//
-//                .setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
-//                .build();
-
+        GateRelease = follower.pathBuilder()
+                .addPath(
+                        new BezierLine(
+                                new Pose(58.428, 85.012),
+                                new Pose(20.516, 69.083)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(-45), Math.toRadians(-90))
+                .build();
 //        GateShoot = follower.pathBuilder()
 //                .addPath(
 //                        new BezierLine(
@@ -228,6 +232,25 @@ public class BlueHumanClose extends LinearOpMode {
 //                .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-52))
 //                .build();
 
+        HumanIntake = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(15.516, 69.083),
+                                new Pose(20.850, 64.337),
+                                new Pose(9.232, 9.322)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(-135))
+                .build();
+        HumanShoot = follower.pathBuilder()
+                .addPath(
+                        new BezierLine(
+                                new Pose(9.232, 9.322),
+                                new Pose(58.428, 85.012)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(-115), Math.toRadians(-45))
+                .build();
         Stack1 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
@@ -247,6 +270,27 @@ public class BlueHumanClose extends LinearOpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-50.5))
+                .build();
+        HumanINTAKE = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(58.913, 84.937),
+                                new Pose(48.174, 45.816),
+                                new Pose(11.846, 33.393),
+                                new Pose(9.212, 10.418)
+                        )
+                )
+                .setConstantHeadingInterpolation(-125)
+                .build();
+
+        HumanOUT = follower.pathBuilder()
+                .addPath(
+                        new BezierLine(
+                                new Pose(9.212, 10.418),
+                                new Pose(59.033, 84.916)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(-125), Math.toRadians(-45))
                 .build();
     }
 
@@ -278,13 +322,11 @@ public class BlueHumanClose extends LinearOpMode {
         );
 
         SequenceGate = new SequentialCommand(
-                PedroToCommand(GateIn,true),
                 new ParallelCommand(
                         intake.intake(),
-                        PedroToCommand(GateIntermediary,true)
+                        PedroToCommand(HumanINTAKE,true)
                 ),
-                new WaitCommand(1200),
-                PedroToCommand(GateOut,true)
+                PedroToCommand(HumanOUT,true)
         );
 
 
@@ -312,24 +354,21 @@ public class BlueHumanClose extends LinearOpMode {
                 SequenceShoot,
                 //END OF STACK 2
 
-                SequenceGate, // FIRST GATE
-                SequenceShoot,
-                //END OF GATE 1
+                PedroToCommand(GateRelease,true),
+                new WaitCommand(1000),
+                new ParallelCommand(
+                        intake.intake(),
+                        PedroToCommand(GateIn,true)
+                ),
 
-                SequenceGate, // SECOND GATE
+                PedroToCommand(GateOut,true)  ,
                 SequenceShoot,
-                // END OF GATE 2
 
-                SequenceGate, // THIRD GATE
+                SequenceGate,
                 SequenceShoot,
-                //END OF GATE 3
-//                new ParallelCommand(
-//                        intake.intake(),
-//                        PedroToCommand(Stack1,true)
-//                ),
+                SequenceGate,
+                SequenceShoot,
 
-//                PedroToCommand(Stack1Shoot,true),
-//                SequenceShoot,
 
                 intake.stop(),
                 new InstantCommand(flywheel::disable)
@@ -360,8 +399,6 @@ public class BlueHumanClose extends LinearOpMode {
             follower.update();
             panelsTelemetry.update();
 
-            log("Intake voltage",intake.getCurrentAmps());
-            intake.BallNumber(intake.getCurrentAmps());
 
             localizerPedro.getTelemetry(telemetry);
 //            log("Actual Localizer Pose", follower.getPose().toString());
